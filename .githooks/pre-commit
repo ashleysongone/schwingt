@@ -1,0 +1,3 @@
+#!/bin/sh
+# 提交前自动检查，说明见 scripts/check-repo.mjs
+exec node scripts/check-repo.mjs --staged

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f3efe6" />
+    <title>Schwingt 钢琴练习</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23262019'/%3E%3Cpath d='M6 8h20v16H6z' fill='%23fffdf8'/%3E%3Cpath d='M11 8h3v9h-3zM18 8h3v9h-3z' fill='%23262019'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <header class="bar bar-main">
+        <button id="btn-library" class="title-btn" title="曲库">
+          <span id="song-title">曲库</span>
+          <svg viewBox="0 0 24 24" class="icon small"><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+
+        <div class="group">
+          <button id="btn-start" class="icon-btn" title="回到开头（Home）">
+            <svg viewBox="0 0 24 24" class="icon fill"><path d="M6 5h2.4v14H6zM20 5v14l-10-7z" /></svg>
+          </button>
+          <button id="btn-play" class="icon-btn primary" title="播放 / 暂停（空格）">
+            <svg viewBox="0 0 24 24" class="icon fill" id="icon-play"><path d="M8 5v14l11-7z" /></svg>
+            <svg viewBox="0 0 24 24" class="icon fill" id="icon-pause" hidden><path d="M6.5 5h4v14h-4zM13.5 5h4v14h-4z" /></svg>
+          </button>
+          <button id="btn-prev" class="icon-btn" title="上一个音（←）">
+            <svg viewBox="0 0 24 24" class="icon"><path d="M15 6l-6 6 6 6" /></svg>
+          </button>
+          <button id="btn-next" class="icon-btn" title="下一个音（→）">
+            <svg viewBox="0 0 24 24" class="icon"><path d="M9 6l6 6-6 6" /></svg>
+          </button>
+        </div>
+
+        <div class="group tempo">
+          <span class="group-label">速度</span>
+          <button id="btn-slower" class="icon-btn" title="慢一点">
+            <svg viewBox="0 0 24 24" class="icon"><path d="M6 12h12" /></svg>
+          </button>
+          <input id="tempo" type="range" min="30" max="120" step="5" value="100" aria-label="速度" />
+          <button id="btn-faster" class="icon-btn" title="快一点">
+            <svg viewBox="0 0 24 24" class="icon"><path d="M6 12h12M12 6v12" /></svg>
+          </button>
+          <output id="tempo-label" for="tempo">100%</output>
+        </div>
+
+        <div class="group">
+          <button id="btn-metro" class="toggle" title="节拍器（M）">节拍器</button>
+          <button id="btn-countin" class="toggle" title="开始前先数一小节">预备拍</button>
+        </div>
+
+        <div class="group">
+          <button id="btn-select" class="toggle" title="在谱子上点两下，选出要反复练的几小节">选段</button>
+          <span id="region-chip" class="chip" hidden>
+            <span id="region-text"></span>
+            <button id="btn-region-clear" title="取消选段" aria-label="取消选段">
+              <svg viewBox="0 0 24 24" class="icon small"><path d="M7 7l10 10M17 7L7 17" /></svg>
+            </button>
+          </span>
+          <button id="btn-loop" class="toggle" title="播完自动从头再来（L）">循环</button>
+        </div>
+      </header>
+
+      <div class="bar bar-hands">
+        <div id="hands" class="hands"></div>
+        <label class="group select-wrap">
+          <span class="group-label">唱名</span>
+          <select id="label-mode" aria-label="唱名方式"></select>
+        </label>
+        <div class="group">
+          <span class="group-label">谱面</span>
+          <button id="btn-zoom-out" class="icon-btn" title="缩小">
+            <svg viewBox="0 0 24 24" class="icon"><path d="M6 12h12" /></svg>
+          </button>
+          <button id="btn-zoom-in" class="icon-btn" title="放大">
+            <svg viewBox="0 0 24 24" class="icon"><path d="M6 12h12M12 6v12" /></svg>
+          </button>
+        </div>
+        <div id="info" class="info"></div>
+      </div>
+
+      <div class="stage">
+        <main id="score-host"></main>
+        <div id="empty" class="empty" hidden>
+          <p>还没有打开谱子</p>
+          <button id="btn-empty-open" class="toggle on">打开曲库</button>
+        </div>
+        <div id="count" class="count" hidden></div>
+        <div id="hint" class="hint" hidden></div>
+        <div id="busy" class="busy" hidden><span id="busy-text"></span></div>
+      </div>
+
+      <div id="sing" class="sing"></div>
+      <div id="keyboard"></div>
+    </div>
+
+    <dialog id="library" class="library">
+      <div class="library-head">
+        <h2>曲库</h2>
+        <button id="btn-library-close" class="icon-btn" aria-label="关闭">
+          <svg viewBox="0 0 24 24" class="icon"><path d="M7 7l10 10M17 7L7 17" /></svg>
+        </button>
+      </div>
+      <ul id="library-list" class="library-list"></ul>
+      <div class="library-foot">
+        <button id="btn-import" class="toggle on">导入谱子</button>
+        <span class="library-tip">支持 MusicXML（.musicxml / .xml / .mxl）和 MIDI（.mid），也可以把文件直接拖进窗口</span>
+        <input id="file" type="file" accept=".musicxml,.xml,.mxl,.mid,.midi" hidden />
+      </div>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,671 @@
+:root {
+  --bg: #f3efe6;
+  --panel: #fffdf8;
+  --paper: #ffffff;
+  --ink: #262019;
+  --muted: #7b7366;
+  --line: #e0d9cb;
+  --line-strong: #c9c0ae;
+  --rh: #2b78d8;
+  --lh: #dc7417;
+  --other: #6b8f3a;
+  --cursor: rgba(255, 190, 40, 0.42);
+  --radius: 10px;
+  --tap: 40px;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  color: var(--ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  overscroll-behavior: none;
+}
+
+button,
+select,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+#app {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  height: 100dvh;
+  min-width: 0;
+}
+
+/* ---------- 工具栏 ---------- */
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  padding: 8px 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.bar-hands {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background: var(--bg);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.group-label {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+
+.icon.fill {
+  fill: currentColor;
+  stroke: none;
+}
+
+.icon.small {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.icon-btn:active,
+.toggle:active,
+.title-btn:active {
+  transform: translateY(1px);
+}
+
+.icon-btn.primary {
+  width: 52px;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--panel);
+}
+
+.title-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  height: var(--tap);
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.title-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toggle {
+  height: var(--tap);
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.toggle.on {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--panel);
+}
+
+.tempo input[type='range'] {
+  width: clamp(90px, 14vw, 190px);
+  accent-color: var(--ink);
+}
+
+#tempo-label {
+  min-width: 108px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: var(--tap);
+  padding: 0 4px 0 12px;
+  border-radius: var(--radius);
+  background: rgba(43, 120, 216, 0.12);
+  color: #1c4f93;
+  white-space: nowrap;
+}
+
+.chip button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+}
+
+/* ---------- 左右手 ---------- */
+
+.hands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.hand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 4px 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.hand .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--other);
+}
+
+.hand.t0 .dot {
+  background: var(--rh);
+}
+
+.hand.t1 .dot {
+  background: var(--lh);
+}
+
+.hand-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.seg {
+  display: flex;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.seg button {
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  background: var(--paper);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.seg button.on {
+  background: var(--ink);
+  color: var(--panel);
+}
+
+.hand .toggle {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 9px;
+}
+
+.select-wrap select {
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--paper);
+}
+
+.bar-hands .icon-btn {
+  width: 36px;
+  height: 36px;
+}
+
+.info {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 谱面 ---------- */
+
+.stage {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  min-width: 0;
+}
+
+#score-host {
+  position: relative;
+  min-height: 0;
+  overflow: auto;
+  background: var(--paper);
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheet {
+  position: relative;
+  min-height: 100%;
+  padding-bottom: 40vh;
+}
+
+.sheet-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 7px;
+  background: var(--cursor);
+  mix-blend-mode: multiply;
+  will-change: transform;
+}
+
+.loop-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-top: 2px solid rgba(43, 120, 216, 0.45);
+  border-bottom: 2px solid rgba(43, 120, 216, 0.45);
+  background: rgba(43, 120, 216, 0.07);
+  mix-blend-mode: multiply;
+}
+
+.loop-box.first {
+  border-left: 4px solid var(--rh);
+  border-radius: 6px 0 0 6px;
+}
+
+.loop-box.last {
+  border-right: 4px solid var(--rh);
+  border-radius: 0 6px 6px 0;
+}
+
+.loop-box.first.last {
+  border-radius: 6px;
+}
+
+.loop-box.pending {
+  border-style: dashed;
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  background: var(--paper);
+  color: var(--muted);
+}
+
+.count {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: rgba(38, 32, 25, 0.82);
+  color: var(--panel);
+  font-size: 110px;
+  font-weight: 700;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.hint {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  z-index: 6;
+  max-width: min(90vw, 560px);
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(38, 32, 25, 0.9);
+  color: var(--panel);
+  font-size: 14px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.hint.error {
+  background: #a3261d;
+}
+
+.busy {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  background: rgba(243, 239, 230, 0.72);
+  color: var(--ink);
+  font-size: 15px;
+}
+
+/* ---------- 唱名条 ---------- */
+
+.sing {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-height: 46px;
+  padding: 4px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.sing-hand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 150px;
+}
+
+.sing-hand .who {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.sing-hand .syl {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--other);
+}
+
+.sing-hand.t0 .syl {
+  color: var(--rh);
+}
+
+.sing-hand.t1 .syl {
+  color: var(--lh);
+}
+
+.sing-status {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ---------- 键盘 ---------- */
+
+.kb {
+  position: relative;
+  height: clamp(86px, 17vh, 150px);
+  border-top: 3px solid var(--ink);
+  background: var(--ink);
+  user-select: none;
+  touch-action: none;
+  overflow: hidden;
+}
+
+.key {
+  position: absolute;
+  top: 0;
+}
+
+.key.white {
+  height: 100%;
+  border: 1px solid #b7af9f;
+  border-top: 0;
+  border-radius: 0 0 5px 5px;
+  background: var(--panel);
+}
+
+.key.black {
+  z-index: 2;
+  height: 61%;
+  border-radius: 0 0 4px 4px;
+  background: #2b251e;
+}
+
+.key .lab {
+  position: absolute;
+  right: -6px;
+  bottom: 5px;
+  left: -6px;
+  color: #aaa192;
+  font-size: 10px;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.key.middle .lab {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.key.pressed {
+  filter: brightness(0.85);
+}
+
+.key.on.t0 {
+  background: var(--rh);
+  border-color: #1b5cae;
+}
+
+.key.on.t1 {
+  background: var(--lh);
+  border-color: #b15a0c;
+}
+
+.key.on.t2 {
+  background: var(--other);
+}
+
+.key.on .lab {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ---------- 曲库 ---------- */
+
+.library {
+  width: min(92vw, 560px);
+  max-height: 84vh;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 24px 60px rgba(38, 32, 25, 0.28);
+}
+
+.library::backdrop {
+  background: rgba(38, 32, 25, 0.4);
+}
+
+.library-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px 20px;
+}
+
+.library-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.library-list {
+  max-height: 52vh;
+  margin: 0;
+  padding: 0 12px;
+  overflow: auto;
+  list-style: none;
+}
+
+.library-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.library-open {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 8px;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
+.library-open strong {
+  display: block;
+  font-size: 16px;
+}
+
+.library-open small {
+  color: var(--muted);
+}
+
+.library-open.current strong::after {
+  content: '正在练';
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(43, 120, 216, 0.14);
+  color: #1c4f93;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.library-remove {
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.library-empty {
+  padding: 18px 8px;
+  color: var(--muted);
+}
+
+.library-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--line);
+}
+
+.library-tip {
+  flex: 1;
+  min-width: 200px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+body.dragging #app::after {
+  content: '松手导入谱子';
+  position: absolute;
+  inset: 12px;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  border: 3px dashed var(--rh);
+  border-radius: 18px;
+  background: rgba(243, 239, 230, 0.9);
+  font-size: 22px;
+}
+
+@media (max-width: 760px) {
+  :root {
+    --tap: 38px;
+  }
+
+  .bar {
+    gap: 6px 10px;
+    padding: 6px 10px;
+  }
+
+  #tempo-label {
+    min-width: 0;
+  }
+
+  .info {
+    display: none;
+  }
+}

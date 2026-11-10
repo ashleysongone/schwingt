@@ -1,0 +1,11 @@
+node_modules/
+dist/
+e2e-out/
+scores-raw/
+*.log
+
+# 本机的“不想公开的词”词表，只给提交前检查用
+.private-words
+
+# Claude Code 的本机设置
+.claude/

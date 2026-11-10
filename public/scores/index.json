@@ -1,0 +1,37 @@
+[
+  {
+    "id": "qingtian",
+    "title": "晴天",
+    "composer": "周杰伦",
+    "file": "qingtian.mid",
+    "note": "由 MIDI 自动转谱，左右手是分好的"
+  },
+  {
+    "id": "the-truth-that-you-leave",
+    "title": "The Truth That You Leave",
+    "composer": "Pianoboy 高至豪",
+    "file": "the-truth-that-you-leave.mid",
+    "note": "由 MIDI 自动转谱，左右手是分好的"
+  },
+  {
+    "id": "fanfangxiang-de-zhong-easy",
+    "title": "反方向的钟（C 调简化版）",
+    "composer": "周杰伦",
+    "file": "fanfangxiang-de-zhong-easy.mid",
+    "note": "36 小节：前奏、主歌、导歌、副歌各一遍。右手单音旋律，左手每个和弦三个音"
+  },
+  {
+    "id": "fanfangxiang-de-zhong",
+    "title": "反方向的钟（完整扒谱）",
+    "composer": "周杰伦",
+    "file": "fanfangxiang-de-zhong.mid",
+    "note": "原调降 B 大调，整首歌的密集扒谱，左右手是按音高自动分的，很难"
+  },
+  {
+    "id": "twinkle",
+    "title": "小星星",
+    "composer": "传统儿歌",
+    "file": "twinkle.musicxml",
+    "note": "示例曲，用来熟悉软件"
+  }
+]
