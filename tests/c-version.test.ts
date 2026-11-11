@@ -21,12 +21,23 @@ describe('反方向的钟 C 调版', () => {
       .sort();
   const loudest = (bar: number, notes = right): number => Math.max(...notes.filter((n) => n.measure === bar - 1).map((n) => n.level ?? 1));
 
-  it('67 小节，C 大调，全曲只用白键，两只手分在中央 C 两边', () => {
+  it('67 小节，C 大调，两只手分在中央 C 两边', () => {
     expect(score.measures).toHaveLength(67);
     for (const m of score.measures) expect([m.duration, m.fifths]).toEqual([4, 0]);
-    expect(score.notes.every((n) => n.alter === 0)).toBe(true);
     expect(Math.min(...right.map((n) => n.midi))).toBeGreaterThanOrEqual(60);
     expect(Math.max(...left.map((n) => n.midi))).toBeLessThanOrEqual(60);
+  });
+
+  it('黑键只有升 sol 和升 fa，只出现在导歌和进副歌前那几小节', () => {
+    const black = score.notes.filter((n) => n.alter !== 0);
+    expect(new Set(black.map((n) => `${n.step}${n.alter}`))).toEqual(new Set(['G1', 'F1']));
+    const bars = new Set(black.map((n) => n.measure + 1));
+    expect([...bars].sort((a, b) => a - b)).toEqual([13, 14, 15, 16, 17, 19, 20, 41, 42, 43, 44, 45, 47, 48]);
+    // 导歌的低音半音下行：升 sol、sol｜升 fa、fa
+    const bass = (bar: number): number[] => left.filter((n) => n.measure === bar - 1 && (n.start === 0 || n.start === 2)).map((n) => n.midi);
+    expect([...bass(13), ...bass(14)]).toEqual([44, 43, 42, 41]);
+    // 第三句旋律里的升 sol
+    expect(right.filter((n) => n.measure === 15).map((n) => n.midi).slice(0, 4)).toEqual([69, 71, 68, 69]);
   });
 
   it('重复的段落一个音都不差', () => {
@@ -65,8 +76,17 @@ describe('反方向的钟 C 调版', () => {
   });
 
   it('重音小节左手是八度，踏板一拍一换；结尾渐慢', () => {
-    const bass = left.filter((n) => n.measure === 19 && n.start === 0).map((n) => n.midi);
-    expect(bass.sort((a, b) => a - b)).toEqual([40, 52]);
+    const hit = (beat: number): number[] =>
+      left
+        .filter((n) => n.measure === 19 && n.start === beat)
+        .map((n) => n.midi)
+        .sort((a, b) => a - b);
+    expect([hit(0), hit(1), hit(2), hit(3)]).toEqual([
+      [44, 56],
+      [40, 52],
+      [41, 53],
+      [40, 52],
+    ]);
     expect(score.measures[19].pedals).toEqual([
       { offset: 0, type: 'change' },
       { offset: 1, type: 'change' },

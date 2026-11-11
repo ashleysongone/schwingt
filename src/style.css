@@ -671,6 +671,11 @@ button {
   font-size: 12px;
 }
 
+.lyrics-body .lyrics-note a {
+  margin-left: 6px;
+  color: #1c4f93;
+}
+
 body.dragging #app::after {
   content: '松手导入谱子';
   position: absolute;

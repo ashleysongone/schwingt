@@ -1,4 +1,5 @@
-// 《反方向的钟》C 调版：手工编配，直接写成 MusicXML。全曲只用白键，重复的段落一个音都不差。
+// 《反方向的钟》C 调版：手工编配，直接写成 MusicXML。重复的段落一个音都不差。
+// 除了导歌和进副歌前那几小节（照原曲用到升 sol、升 fa），全曲都是白键。
 // 用法：node scripts/make-c-fanfangxiang.mjs
 //
 // 素材对照 public/scores/fanfangxiang-de-zhong.mid（完整扒谱，移到 C 调）：旋律和它的节奏照原曲，
@@ -10,8 +11,8 @@
 // - 左手一个音型用到底：根音、五度、十度，最后落到同一个 sol 上（F、G、Am7 三个和弦共用这个 sol）。
 //   前奏和主歌前半只弹骨架（根音、五度、sol），主歌后半和副歌弹完整的，多出来的只是中间那个十度音
 // - 和声的色彩放在长音和句尾：主歌后半每组第一个音加三度，导歌第二句加六度，副歌的长音加五度、六度
-// - 导歌的低音是 la–sol–fa–mi 一路下行（原曲是半音下行，用到黑键），接着 re、mi，
-//   在 Esus4 上一拍一个重音，再落进副歌的 F
+// - 导歌照原曲的和声：低音半音下行（E/G♯–G｜D/F♯–F），接着 Dm、E，
+//   在 E 大三和弦上一拍一个重音，再落进副歌的 F。试过全换成白键和弦，味道不对
 // - 力度：前奏很轻，主歌中弱，导歌渐强到重音小节最响，副歌强，高八度那遍更强，间奏和尾奏轻下来；
 //   结尾渐慢，停在 Am 加九度的和弦上
 //
@@ -82,19 +83,24 @@ const verse = [
   { level: 0.88, rh: `${CELL_THIRD} ${CELL_THIRD}`, ...am(FULL) },
 ].map((bar) => ({ ...bar, sing: 'verse' }));
 
-/** 导歌连同进副歌前的铺垫。两遍一模一样，第二遍不再标指法 */
+/**
+ * 导歌连同进副歌前的铺垫。两遍一模一样，第二遍不再标指法。
+ * 这一段照原曲的和声，是全曲唯一用到黑键的地方：低音半音下行（升 sol–sol｜升 fa–fa），
+ * 旋律里有一个升 sol，进副歌前是带升 sol 的 E 大三和弦。换成白键和弦味道就不对了。
+ */
 function preChorus(first) {
   const f = (s) => (first ? s : plain(s));
-  const down = { lh: 'F2:4 C3:4 E2:4 C3:4', chords: 'F@0 C/E@8', pedal: HALVES };
+  // 每个低音上面再弹一个和弦里的音，一拍一个
+  const upper = { lh: 'G#2:4 E3:4 G2:4 D3:4', chords: 'E/G#@0 G@8', pedal: HALVES };
+  const lower = { lh: 'F#2:4 D3:4 F2:4 C3:4', chords: 'D/F#@0 F@8', pedal: HALVES };
   return [
-    // 低音 la–sol｜fa–mi，两拍一个，一路下行
-    { label: '导歌', dyn: 'mf', level: 0.94, sing: 'pre', rh: f(PRE), lh: f('A2:4/5 E3:4/2 G2:4/5 D3:4/2'), chords: 'Am@0 G@8', pedal: HALVES },
+    { label: '导歌', dyn: 'mf', level: 0.94, sing: 'pre', rh: f(PRE), ...upper, lh: f('G#2:4/5 E3:4/1 G2:4/5 D3:4/1') },
     // 句尾的 la 之后接一个小小的回声：do sol la
-    { level: 0.94, sing: 'pre', rh: f('A4:2/2 C5:2_ G4:2_ A4:2~_ A4:4 r:4'), ...down },
-    { level: 0.98, sing: 'pre', rh: PRE_SIXTHS, lh: 'A2:4 E3:4 G2:4 D3:4', chords: 'Am@0 G@8', pedal: HALVES },
-    // 第三句：句尾的 ti 下面垫 mi，再由 do、la 接住（原曲这里是伴奏在接）
-    { level: 1.0, sing: 'pre', rh: f('A4:2/2 B4:2/3 A4:2 A4:2 B4+E4:4 C5+A4:4_'), ...down },
-    { level: 1.04, sing: 'pre', rh: 'A4:2 B4:2 A4:2 A4:2 B4+E4:4 C5+A4:4_', ...down },
+    { level: 0.94, sing: 'pre', rh: f('A4:2/2 C5:2_ G4:2_ A4:2~_ A4:4 r:4'), ...lower, lh: f('F#2:4/5 D3:4/1 F2:4/5 C3:4/1') },
+    { level: 0.98, sing: 'pre', rh: PRE_SIXTHS, ...upper },
+    // 第三句：第三个字是升 sol，贴着 la 的下面擦过去；句尾的 ti 下面垫 mi，再由 do、la 接住（原曲这里是伴奏在接）
+    { level: 1.0, sing: 'pre', rh: f('A4:2/3 B4:2/4 G#4:2/2 A4:2/3 B4+E4:4 C5+A4:4_'), ...lower },
+    { level: 1.04, sing: 'pre', rh: 'A4:2 B4:2 A4:2 A4:2 B4+E4:4 C5+A4:4_', ...lower },
     // 从这里开始往上推：左手从一拍一个音变成半拍一个音
     {
       cue: '渐强',
@@ -106,23 +112,23 @@ function preChorus(first) {
       chords: 'Dm@0',
       pedal: HALVES,
     },
-    // 右手在 Esus4 上一级级爬到最高
+    // E 大三和弦：左手分解和弦里有升 sol；右手绕着 ti 和 mi 一级级爬到最高，每一拍都落在和弦里的音上
     {
       level: [1.16, 1.3],
-      rh: f('A4:2/1 B4:2/2 A4:2 B4:2 D5:2/1 E5:2/2 A5:2/4 B5:2/5'),
-      lh: f('E3:2/5 B3:2/1 A3:2/2 B3:2 E3:2 B3:2 A3:2 B3:2'),
-      chords: 'Esus4@0',
+      rh: f('B4:2/2 A4:2/1 B4:2 D5:2/4 E5:2/2 D5:2/1 E5:2 B5:2/5'),
+      lh: f('E3:2/5 B3:2/1 G#3:2/2 B3:2 E3:2 B3:2 G#3:2 B3:2'),
+      chords: 'E@0',
       pedal: HALVES,
     },
-    // 一拍一个重音：Esus4、Esus4、F、Esus4，最高音 mi–ti–do–re–sol 送进副歌的 la；踏板一拍一换，最后抬起
+    // 一拍一个重音：E（低音升 sol）、E、F、E7，最高音 mi–ti–do–re–sol 送进副歌的 la；踏板一拍一换，最后抬起
     {
       cue: '重音',
       wedge: 'stop',
       dyn: 'ff',
       level: 1.39,
-      rh: 'E5+B4+A4:2 r:2 B4+A4+E4:2 r:2 C5+A4+F4:2 r:2 D5+B4+A4:2 G5:2',
-      lh: 'E3+E2:4 E3+E2:4 F3+F2:2 F3+F2:2 E3+E2:4',
-      chords: 'Esus4@0 F@8 Esus4@12',
+      rh: 'E5+B4+G#4:2 r:2 B4+G#4+E4:2 r:2 C5+A4+F4:2 r:2 D5+B4+G#4:2 G5:2',
+      lh: 'G#3+G#2:4 E3+E2:4 F3+F2:2 F3+F2:2 E3+E2:4',
+      chords: 'E/G#@0 E@4 F@8 E7@12',
       pedal: 'change@0 change@4 change@8 change@12 stop@16',
     },
   ];

@@ -86,7 +86,8 @@ git config core.hooksPath .githooks
 - 《The Truth That You Leave》：OnlineSequencer 上的公开序列 5559401，按网站的导出规则转成 MIDI
 - 《反方向的钟》：OnlineSequencer 上的公开序列 3955810，同样转成 MIDI
 - 《反方向的钟（C 调版）》：手工编配，音符写在 `scripts/make-c-fanfangxiang.mjs` 里，生成 MusicXML。
-  素材对照上面那份扒谱（移到 C 调，全曲只用白键）：旋律和节奏照原曲，左手是一个用到底的分解和弦音型，
+  素材对照上面那份扒谱（移到 C 调）：旋律和节奏照原曲，左手是一个用到底的分解和弦音型，
+  导歌照原曲用半音下行的低音和 E 大三和弦（全曲只有这里用到升 sol、升 fa 两个黑键），
   第二遍副歌高八度，进副歌前有渐强和一拍一个的重音和弦；67 小节，重复的段落完全一样。
   谱面带力度、踏板线、和弦名、指法，并标了歌词位置（歌词本身不在文件里）
 - 《反方向的钟（C 调入门版）》：手工编配，音符写在 `scripts/make-easy-fanfangxiang.mjs` 里，生成 MusicXML。
