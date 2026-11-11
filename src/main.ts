@@ -309,7 +309,8 @@ function buildHands(): void {
   singEl.replaceChildren();
   handUi.clear();
   if (!score) return;
-  for (const t of score.tracks) {
+  // 屏幕上从左到右和键盘、和人的两只手对上：左手（下面那行谱表）在左，右手在右
+  for (const t of [...score.tracks].reverse()) {
     const cls = `t${Math.min(t.index, 2)}`;
     const wrap = h('div', `hand ${cls}`);
     const seg = h('div', 'seg');
