@@ -379,9 +379,9 @@ function showLyrics(): void {
   if (!currentId || !lyricRoom) return;
   lyricsText.value = lyricsById[currentId] ?? '';
   $('lyrics-need').textContent = String(lyricRoom);
-  // 曲名去掉括号里的版本说明再去搜
+  // 曲名去掉括号里的版本说明再去搜；搜索词里带上常用的歌词站，它的结果会排在前面
   const song = (score?.title ?? '').replace(/[（(].*$/, '').trim();
-  $<HTMLAnchorElement>('lyrics-search').href = `https://cn.bing.com/search?q=${encodeURIComponent(`${song} 歌词`)}`;
+  $<HTMLAnchorElement>('lyrics-search').href = `https://cn.bing.com/search?q=${encodeURIComponent(`${song} 歌词 lyrics.net.cn`)}`;
   updateLyricsStatus();
   if (!lyricsDialog.open) lyricsDialog.showModal();
 }
