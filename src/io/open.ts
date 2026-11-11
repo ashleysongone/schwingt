@@ -28,10 +28,13 @@ export function interpret(data: ArrayBuffer, name: string, meta: { title?: strin
   const conv = midiToMusicXml(parseMidi(data), title, meta.composer);
   const doc = parseXml(conv.xml);
   const score = parseMusicXml(doc);
-  // 谱面上为了好认把一些音记短了，播放时还按 MIDI 里实际按住的长度
+  // 谱面上为了好认把一些音记短了，播放时还按 MIDI 里实际按住的长度；力度也从 MIDI 里取回来
   for (const n of score.notes) {
-    const full = conv.durations.get(`${n.track}:${n.measure}:${Math.round(n.start * 4)}:${n.midi}`);
+    const key = `${n.track}:${n.measure}:${Math.round(n.start * 4)}:${n.midi}`;
+    const full = conv.durations.get(key);
     if (full) n.dur = full / 4;
+    const level = conv.levels.get(key);
+    if (level) n.level = level;
   }
   return { doc, score, generated: true, warnings: conv.warnings };
 }

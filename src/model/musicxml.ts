@@ -2,6 +2,8 @@ import { Measure, NoteEvent, PedalType, Score, Track, toMidi } from './types';
 
 /** 装饰音没有时值，播放时给它一个很短的长度 */
 export const GRACE_DUR = 0.125;
+/** MusicXML 里 note 的 dynamics 属性以“强”为 100，中强大约是它的九成 */
+const MEZZO_FORTE = 89;
 const DEFAULT_BEATS = 4;
 const DEFAULT_BEAT_TYPE = 4;
 
@@ -247,6 +249,9 @@ export function parseMusicXml(input: string | Document): Score {
               grace: isGrace,
               fingering,
             };
+            // note 的 dynamics 属性是“强”的默认力度的百分比，折成相对中强的倍数
+            const dynamics = parseFloat(el.getAttribute('dynamics') ?? '');
+            if (dynamics > 0) note.level = Math.round((dynamics / MEZZO_FORTE) * 100) / 100;
             notes.push(note);
             if (ties.includes('start')) openTies.set(midi, note);
             break;

@@ -1,4 +1,5 @@
 import { Timeline } from '../model/timeline';
+import type { NoteEvent } from '../model/types';
 import { Piano } from './piano';
 
 /** 提前多少秒把音符交给声卡排队 */
@@ -141,13 +142,14 @@ export class Player {
       if (n.start > beat + EPS) break;
       if (this.muted.has(n.note.track)) continue;
       const dur = (tl.secAt(n.end) - tl.secAt(n.start)) / this.factor;
-      this.piano.play(n.note.midi, t, Math.min(dur, 1.6), this.velocity(n.note.track, n.note.grace));
+      this.piano.play(n.note.midi, t, Math.min(dur, 1.6), this.velocity(n.note));
     }
   }
 
-  private velocity(track: number, grace: boolean): number {
-    if (grace) return 0.5;
-    return track === 0 ? 0.74 : 0.6;
+  /** 右手比左手响一点，让旋律突出；谱子带力度信息时在这个基础上加减 */
+  private velocity(note: NoteEvent): number {
+    const base = note.grace ? 0.5 : note.track === 0 ? 0.74 : 0.6;
+    return Math.min(1, Math.max(0.15, base * (note.level ?? 1)));
   }
 
   private halt(): void {
@@ -201,7 +203,7 @@ export class Player {
       const n = tl.notes[this.nextNote++];
       if (this.muted.has(n.note.track)) continue;
       const dur = (tl.secAt(n.soundEnd) - tl.secAt(n.start)) / f;
-      this.piano.play(n.note.midi, timeOf(n.start), dur, this.velocity(n.note.track, n.note.grace));
+      this.piano.play(n.note.midi, timeOf(n.start), dur, this.velocity(n.note));
     }
     while (this.nextClick < tl.clicks.length && tl.clicks[this.nextClick].beat < horizon) {
       const c = tl.clicks[this.nextClick++];

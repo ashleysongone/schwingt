@@ -638,6 +638,39 @@ button {
   font-size: 12px;
 }
 
+/* ---------- 歌词 ---------- */
+
+.lyrics-body {
+  padding: 0 20px 12px;
+}
+
+.lyrics-body p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.lyrics-body textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.lyrics-body .lyrics-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 body.dragging #app::after {
   content: '松手导入谱子';
   position: absolute;

@@ -69,6 +69,7 @@
           <span class="group-label">唱名</span>
           <select id="label-mode" aria-label="唱名方式"></select>
         </label>
+        <button id="btn-lyrics" class="toggle" title="把歌词贴进来，按字对到旋律下面" hidden>歌词</button>
         <div class="group">
           <span class="group-label">谱面</span>
           <button id="btn-zoom-out" class="icon-btn" title="缩小">
@@ -108,6 +109,28 @@
         <button id="btn-import" class="toggle on">导入谱子</button>
         <span class="library-tip">支持 MusicXML（.musicxml / .xml / .mxl）和 MIDI（.mid），也可以把文件直接拖进窗口</span>
         <input id="file" type="file" accept=".musicxml,.xml,.mxl,.mid,.midi" hidden />
+      </div>
+    </dialog>
+
+    <dialog id="lyrics" class="library">
+      <div class="library-head">
+        <h2>歌词</h2>
+        <button id="btn-lyrics-close" class="icon-btn" aria-label="关闭">
+          <svg viewBox="0 0 24 24" class="icon"><path d="M7 7l10 10M17 7L7 17" /></svg>
+        </button>
+      </div>
+      <div class="lyrics-body">
+        <p>
+          把歌词粘贴到下面，从第一句开始，一个字对旋律的一个音。这份谱子用得上前
+          <strong id="lyrics-need"></strong> 个字，后面多出来的不用删；重复的段落会自动用同一段歌词。
+        </p>
+        <textarea id="lyrics-text" rows="9" spellcheck="false" aria-label="歌词"></textarea>
+        <p class="lyrics-note">歌词只保存在这台设备的浏览器里，不会写进谱子文件；换一台设备要再贴一次。</p>
+      </div>
+      <div class="library-foot">
+        <button id="btn-lyrics-save" class="toggle on">保存</button>
+        <button id="btn-lyrics-clear" class="toggle">清空</button>
+        <span id="lyrics-status" class="library-tip"></span>
       </div>
     </dialog>
 

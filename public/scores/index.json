@@ -14,11 +14,18 @@
     "note": "由 MIDI 自动转谱，左右手是分好的"
   },
   {
-    "id": "fanfangxiang-de-zhong-easy",
-    "title": "反方向的钟（C 调简化版）",
+    "id": "fanfangxiang-de-zhong-c",
+    "title": "反方向的钟（C 调版）",
     "composer": "周杰伦",
-    "file": "fanfangxiang-de-zhong-easy.mid",
-    "note": "36 小节：前奏、主歌、导歌、副歌各一遍。右手单音旋律，左手每个和弦三个音"
+    "file": "fanfangxiang-de-zhong-c.musicxml",
+    "note": "手工编配，67 小节，全曲只用白键：前奏、主歌、导歌、副歌两遍（第二遍高八度）、间奏，再来一轮，尾奏。左手一个音型用到底；带力度、踏板线、和弦名和指法，可以贴歌词"
+  },
+  {
+    "id": "fanfangxiang-de-zhong-easy",
+    "title": "反方向的钟（C 调入门版）",
+    "composer": "周杰伦",
+    "file": "fanfangxiang-de-zhong-easy.musicxml",
+    "note": "手工编配，31 小节：右手单音旋律，左手一个两小节的固定音型，带和弦标记、踏板线和指法"
   },
   {
     "id": "fanfangxiang-de-zhong",

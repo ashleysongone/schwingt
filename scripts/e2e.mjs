@@ -223,11 +223,12 @@ const lib = await page.evaluate(() => document.querySelectorAll('#library-list .
 check('曲库里列出曲子', lib >= 1, `${lib} 首`);
 await page.click('#btn-library-close');
 
-// ---------- 曲库里的三首曲子 ----------
+// ---------- 曲库里的曲子 ----------
 for (const [title, slug] of [
   ['晴天', 'qingtian'],
   ['The Truth That You Leave', 'truth'],
-  ['反方向的钟（C 调简化版）', 'fanfangxiang-easy'],
+  ['反方向的钟（C 调版）', 'fanfangxiang-c'],
+  ['反方向的钟（C 调入门版）', 'fanfangxiang-easy'],
   ['反方向的钟（完整扒谱）', 'fanfangxiang'],
 ]) {
   await openFromLibrary(title);
@@ -265,7 +266,32 @@ for (const [title, slug] of [
   await page.keyboard.press('Space');
   await page.click('#btn-countin');
 }
+
+// ---------- 歌词 ----------
+// 谱子里标了歌词位置的曲子才有“歌词”按钮；这里贴一串占位的字，看它们有没有写到旋律下面
+await openFromLibrary('反方向的钟（C 调版）');
+const countWords = () => page.evaluate(() => Array.from(document.querySelectorAll('#score-host svg text')).filter((t) => t.textContent.trim() === '啦').length);
+check('标了歌词位置的谱子有“歌词”按钮', await page.isVisible('#btn-lyrics'));
+await page.click('#btn-lyrics');
+await page.waitForSelector('#lyrics[open]');
+const need = Number(await page.textContent('#lyrics-need'));
+await page.fill('#lyrics-text', '说明：这一行不算\n' + '啦'.repeat(200));
+const status = await page.textContent('#lyrics-status');
+await page.click('#btn-lyrics-save');
+await page.waitForFunction(() => !document.getElementById('lyrics').open && document.getElementById('busy').hidden);
+await sleep(300);
+const shown = await countWords();
+check('贴进去的歌词按字写到旋律下面', need === 162 && shown > 250, `用得上 ${need} 个字，谱面上写了 ${shown} 处；${status}`);
+await page.screenshot({ path: join(outDir, '12-lyrics.png') });
+await page.click('#btn-lyrics');
+await page.waitForSelector('#lyrics[open]');
+await page.click('#btn-lyrics-clear');
+await page.click('#btn-lyrics-save');
+await page.waitForFunction(() => !document.getElementById('lyrics').open && document.getElementById('busy').hidden);
+await sleep(300);
+check('清空后歌词从谱面上去掉', (await countWords()) === 0);
 await openFromLibrary('小星星');
+check('没标歌词位置的谱子不显示“歌词”按钮', !(await page.isVisible('#btn-lyrics')));
 
 // ---------- 平板尺寸 ----------
 await page.setViewportSize({ width: 1024, height: 768 });

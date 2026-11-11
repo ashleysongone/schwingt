@@ -18,13 +18,17 @@
 - 选段循环：点“选段”，在谱子上点第一个小节和最后一个小节
 - 逐个音前进后退（← →），点谱面上的音符可以直接跳过去并听到它
 - 唱名：每只手单独开关，可选固定调、首调、简谱数字、音名
+- 歌词：谱子里标了歌词位置的曲子，工具栏会出现“歌词”按钮。把歌词贴进去，就按字写到旋律的音符下面。
+  歌词只存在本机的浏览器里，不进谱子文件，换一台设备要再贴一次
+- 播放有轻重：谱子里带力度信息时按它发声
 - 屏幕键盘按左右手着色显示当前要按的键
 
 快捷键：空格 播放/暂停，← → 逐个音，Home 回到开头，M 节拍器，L 循环，Esc 取消选段。
 
 关于 MIDI：MIDI 里没有记谱信息，五线谱是自动转出来的。节奏对齐到十六分音符，每只手只记一个声部，
 调号和中途转调是按用到的音推断的，和正式谱子会有出入；播放时的音长仍按 MIDI 原样。
-有正式的 MusicXML 时优先用它。
+MIDI 里的力度会用在播放上（按每只手平常的力度折成相对的轻重），延音踏板画成左手谱下方的踏板线，
+段落标记写在谱面上方。有正式的 MusicXML 时优先用它。
 
 ## 后续计划
 
@@ -42,7 +46,8 @@ npm run build                            类型检查并打包到 dist/
 node scripts/e2e.mjs                     用本机 Edge 无界面跑一遍主要功能（需要先启动开发服务）
 node scripts/check-score.mjs <谱子文件>   导入一份谱子，核对解析和光标定位（需要先启动开发服务）
 node scripts/make-demo.mjs               重新生成示例曲
-node scripts/make-easy-fanfangxiang.mjs  重新生成《反方向的钟》C 调简化版（加 --print 逐小节列出，加 --keep-rhythm 保留原节奏）
+node scripts/make-c-fanfangxiang.mjs     重新生成《反方向的钟》C 调版（手工编配，音符直接写在脚本里）
+node scripts/make-easy-fanfangxiang.mjs  重新生成《反方向的钟》C 调入门版（同上，更简单的一版）
 node scripts/check-repo.mjs              提交前检查（见下）
 ```
 
@@ -62,12 +67,13 @@ git config core.hooksPath .githooks
 
 目录：
 
-- `src/model` 谱子解析、反复展开、播放时间线、唱名、MIDI 转五线谱
+- `src/model` 谱子解析、反复展开、播放时间线、唱名、歌词、MIDI 转五线谱
 - `src/io` 文件读取（MusicXML、MIDI）和本地曲库
 - `src/audio` 钢琴音色和播放调度
 - `src/view` 谱面显示和屏幕键盘
 - `public/scores` 自带曲库，`index.json` 是目录
 - `public/samples/piano` 钢琴采样
+- `scripts` 生成谱子和检查用的小工具；`scripts/lib/score.mjs` 把手写的小节记号写成 MusicXML，记法见文件开头
 - `scores-raw` 下载的原始谱子文件和备选版本（不进仓库）
 
 ## 素材来源
@@ -79,7 +85,12 @@ git config core.hooksPath .githooks
 - 《晴天》：GitHub 上 AutoPiano 项目里的 `static/midi/晴天.mid`
 - 《The Truth That You Leave》：OnlineSequencer 上的公开序列 5559401，按网站的导出规则转成 MIDI
 - 《反方向的钟》：OnlineSequencer 上的公开序列 3955810，同样转成 MIDI
-- 《反方向的钟（C 调简化版）》：用 `scripts/make-easy-fanfangxiang.mjs` 从上面那份完整扒谱生成。
-  旋律取最高声部并移到 C 大调，节奏拉直到八分音符，左手每个和弦弹三个音，只收前奏、主歌、导歌、副歌各一遍
+- 《反方向的钟（C 调版）》：手工编配，音符写在 `scripts/make-c-fanfangxiang.mjs` 里，生成 MusicXML。
+  素材对照上面那份扒谱（移到 C 调，全曲只用白键）：旋律和节奏照原曲，左手是一个用到底的分解和弦音型，
+  第二遍副歌高八度，进副歌前有渐强和一拍一个的重音和弦；67 小节，重复的段落完全一样。
+  谱面带力度、踏板线、和弦名、指法，并标了歌词位置（歌词本身不在文件里）
+- 《反方向的钟（C 调入门版）》：手工编配，音符写在 `scripts/make-easy-fanfangxiang.mjs` 里，生成 MusicXML。
+  右手是人声旋律（对照上面那份扒谱，移到 C 调，节奏照原曲），左手是一个两小节的固定音型，
+  谱面带和弦标记、踏板线和指法；收前奏、主歌、导歌、副歌（反复一遍）和尾奏，共 31 小节
 
 这些曲子的版权归原作者所有，扒谱只供个人练习，请不要拿去商用。

@@ -17,10 +17,15 @@ function vlq(n: number): number[] {
   return out;
 }
 
-const note = (tick: number, dur: number, midi: number, ch = 0): Ev[] => [
-  { tick, bytes: [0x90 | ch, midi, 80] },
+const note = (tick: number, dur: number, midi: number, ch = 0, velocity = 80): Ev[] => [
+  { tick, bytes: [0x90 | ch, midi, velocity] },
   { tick: tick + dur, bytes: [0x80 | ch, midi, 0] },
 ];
+/** 写在曲子里的文字：0x06 是段落标记，0x07 是演奏提示 */
+const text = (tick: number, type: number, value: string): Ev => {
+  const b = Array.from(new TextEncoder().encode(value));
+  return { tick, bytes: [0xff, type, b.length, ...b] };
+};
 const tempo = (tick: number, bpm: number): Ev => {
   const us = Math.round(60_000_000 / bpm);
   return { tick, bytes: [0xff, 0x51, 3, (us >> 16) & 0xff, (us >> 8) & 0xff, us & 0xff] };
@@ -299,12 +304,17 @@ describe('MIDI 转谱', () => {
       [...[0, 1, 2, 3, 4, 5, 6, 7].flatMap((i) => note(i * Q, Q - 20, 60 + (i % 5))), pedal(0, true), pedal(2 * Q, false), pedal(2 * Q + 10, true), pedal(8 * Q, false)],
       [...note(0, 8 * Q - 20, 36)],
     ]);
-    const { score } = interpret(data, 'p.mid');
+    const { doc, score } = interpret(data, 'p.mid');
+    // 抬起后马上又踩下，记成一次“换踏板”
     expect(score.measures[0].pedals).toEqual([
       { offset: 0, type: 'start' },
-      { offset: 2, type: 'stop' },
-      { offset: 2, type: 'start' },
+      { offset: 2, type: 'change' },
     ]);
+    expect(score.measures[1].pedals).toEqual([{ offset: 4, type: 'stop' }]);
+    // 踏板画成左手谱下方的踏板线
+    const marks = Array.from(doc.getElementsByTagName('pedal'));
+    expect(marks.map((p) => p.getAttribute('type'))).toEqual(['start', 'change', 'stop']);
+    expect(marks.every((p) => p.getAttribute('line') === 'yes')).toBe(true);
     expect(score.measures[1].tempos).toEqual([{ offset: 2, bpm: 120 }]);
     const tl = new Timeline(score);
     expect(tl.pedals).toEqual([
@@ -312,6 +322,59 @@ describe('MIDI 转谱', () => {
       [2, 8],
     ]);
     expect(tl.secAt(8)).toBeCloseTo(6 + 1, 6);
+  });
+
+  it('抬起踏板隔了一拍以上才再踩，是抬起和踩下两个动作', () => {
+    const data = smf(Q, [
+      [...[0, 1, 2, 3].flatMap((i) => note(i * Q, Q - 20, 60 + i)), pedal(0, true), pedal(Q, false), pedal(3 * Q, true), pedal(4 * Q, false)],
+      [...note(0, 4 * Q - 20, 36)],
+    ]);
+    const { score } = interpret(data, 'p2.mid');
+    expect(new Timeline(score).pedals).toEqual([
+      [0, 1],
+      [3, 4],
+    ]);
+  });
+
+  it('又密又碎的踏板数据不画在谱面上，但照样用于播放', () => {
+    const taps = Array.from({ length: 40 }, (_, i) => pedal(i * (Q / 4) + 10, i % 2 === 0));
+    const data = smf(Q, [[...[0, 1, 2, 3].flatMap((i) => note(i * Q, Q - 20, 60 + i)), ...taps], [...note(0, 4 * Q - 20, 36)]]);
+    const { doc, score } = interpret(data, 'p3.mid');
+    expect(doc.getElementsByTagName('pedal')).toHaveLength(0);
+    expect(new Timeline(score).pedals.length).toBeGreaterThan(5);
+  });
+
+  it('段落标记和演奏提示写在谱面上方', () => {
+    const data = smf(Q, [
+      [text(0, 0x06, '前奏'), text(4 * Q, 0x06, '副歌'), text(4 * Q, 0x07, '渐强')],
+      [...[0, 1, 2, 3, 4, 5, 6, 7].flatMap((i) => note(i * Q, Q - 20, 72))],
+      [...note(0, 8 * Q - 20, 36)],
+    ]);
+    expect(parseMidi(data).texts).toEqual([
+      { tick: 0, text: '前奏', kind: 'marker' },
+      { tick: 4 * Q, text: '副歌', kind: 'marker' },
+      { tick: 4 * Q, text: '渐强', kind: 'cue' },
+    ]);
+    const { doc } = interpret(data, 'w.mid');
+    const words = Array.from(doc.getElementsByTagName('words'));
+    expect(words.map((w) => [w.textContent, w.closest('measure')!.getAttribute('number'), w.getAttribute('font-weight') ?? w.getAttribute('font-style')])).toEqual([
+      ['前奏', '1', 'bold'],
+      ['副歌', '2', 'bold'],
+      ['渐强', '2', 'italic'],
+    ]);
+  });
+
+  it('力度折成相对这只手平常力度的倍数；力度都一样的那只手不填', () => {
+    const data = smf(Q, [
+      [...note(0, Q, 72, 0, 60), ...note(Q, Q, 74, 0, 60), ...note(2 * Q, Q, 76, 0, 90), ...note(3 * Q, Q, 77, 0, 20)],
+      [...note(0, 4 * Q - 20, 36)],
+    ]);
+    const { score } = interpret(data, 'v.mid');
+    const level = (midi: number): number | undefined => score.notes.find((n) => n.midi === midi)!.level;
+    expect(level(72)).toBe(1);
+    expect(level(76)).toBeCloseTo(1.35, 6); // 90/60 = 1.5，最多放大到 1.35
+    expect(level(77)).toBeCloseTo(0.6, 6); // 20/60 太轻，最少压到 0.6
+    expect(level(36)).toBeUndefined();
   });
 
   it('拍号变化', () => {

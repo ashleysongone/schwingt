@@ -15,6 +15,8 @@ export interface MidiConversion {
   warnings: string[];
   /** 每个音实际按住多久（十六分音符数）。键是 "谱表:小节:小节内位置:音高" */
   durations: Map<string, number>;
+  /** 每个音的相对力度，1 是这只手平常的力度。这只手的力度从头到尾都一样时不填。键同上 */
+  levels: Map<string, number>;
 }
 
 interface QNote {
@@ -23,7 +25,11 @@ interface QNote {
   end: number;
   midi: number;
   hand: 0 | 1;
+  /** MIDI 力度 1–127 */
+  velocity: number;
 }
+
+type PedalMark = { offset: number; type: 'start' | 'change' | 'stop' };
 
 interface MeasureInfo {
   start: number;
@@ -215,7 +221,7 @@ function assignHands(src: MidiNote[], midi: MidiFile, q: (tick: number) => numbe
   const add = (list: MidiNote[], hand: 0 | 1): void => {
     for (const n of list) {
       const on = q(n.tick);
-      notes.push({ on, end: Math.max(on + 1, q(n.tick + n.dur)), midi: n.midi, hand });
+      notes.push({ on, end: Math.max(on + 1, q(n.tick + n.dur)), midi: n.midi, hand, velocity: n.velocity });
     }
   };
 
@@ -408,11 +414,24 @@ export function midiToMusicXml(midi: MidiFile, title: string, composer = ''): Mi
   const baseKey = chooseKey(midi, notes);
   const keys = keysPerMeasure(notes, measures, baseKey, midi.keySigs.length > 0 && baseKey === midi.keySigs[0].fifths);
 
-  const durations = new Map<string, number>();
-  for (const n of notes) {
+  const keyOf = (n: QNote): string => {
     const mi = measureAt(n.on);
-    const key = `${n.hand}:${mi}:${n.on - measures[mi].start}:${n.midi}`;
-    durations.set(key, Math.max(durations.get(key) ?? 0, n.end - n.on));
+    return `${n.hand}:${mi}:${n.on - measures[mi].start}:${n.midi}`;
+  };
+  const durations = new Map<string, number>();
+  for (const n of notes) durations.set(keyOf(n), Math.max(durations.get(keyOf(n)) ?? 0, n.end - n.on));
+
+  // 力度按每只手自己的中位数折成相对值：文件里的绝对数值高低不一，只取它的起伏
+  const levels = new Map<string, number>();
+  for (const hand of [0, 1]) {
+    const list = notes.filter((n) => n.hand === hand);
+    const sorted = list.map((n) => n.velocity).sort((a, b) => a - b);
+    if (!sorted.length || sorted[0] === sorted[sorted.length - 1]) continue;
+    const median = sorted[sorted.length >> 1] || 1;
+    for (const n of list) {
+      const level = Math.min(1.35, Math.max(0.6, n.velocity / median));
+      levels.set(keyOf(n), Math.max(levels.get(keyOf(n)) ?? 0, level));
+    }
   }
 
   const staffPieces = [0, 1].map((hand) =>
@@ -422,7 +441,7 @@ export function midiToMusicXml(midi: MidiFile, title: string, composer = ''): Mi
     ),
   );
 
-  // 速度和踏板按位置分到各小节，只影响播放，不画在谱面上
+  // 速度变化、段落名和演奏提示按位置分到各小节
   const extras: string[][] = measures.map(() => []);
   const offsetXml = (pos: number, mi: number): string => {
     const o = pos - measures[mi].start;
@@ -439,14 +458,56 @@ export function midiToMusicXml(midi: MidiFile, title: string, composer = ''): Mi
     const mi = measureAt(pos);
     extras[mi].push(`<sound tempo="${bpm}">${offsetXml(pos, mi)}</sound>`);
   }
-  let pedalDown = false;
-  for (const p of midi.pedals) {
-    if (p.down === pedalDown) continue;
-    pedalDown = p.down;
-    const pos = Math.min(q(p.tick), Math.max(0, lastEnd));
-    const mi = measureAt(pos);
-    extras[mi].push(`<sound damper-pedal="${p.down ? 'yes' : 'no'}">${offsetXml(pos, mi)}</sound>`);
+  // 文字太多的多半不是段落名（有的软件会把歌词、版权信息写成标记），就不往谱面上放了
+  if (midi.texts.length <= Math.max(8, measures.length)) {
+    for (const t of midi.texts) {
+      const pos = q(t.tick);
+      if (pos >= lastEnd) continue;
+      const mi = measureAt(pos);
+      const style = t.kind === 'marker' ? 'font-weight="bold"' : 'font-style="italic"';
+      extras[mi].push(
+        `<direction placement="above"><direction-type><words ${style}>${escapeXml(t.text)}</words></direction-type>` +
+          `${offsetXml(pos, mi)}<staff>1</staff></direction>`,
+      );
+    }
   }
+
+  // 踏板：踩下、换、抬起。抬起后不到半拍又踩下，算一次“换踏板”
+  const pedalEvents: { pos: number; down: boolean }[] = [];
+  for (const p of midi.pedals) {
+    if ((pedalEvents[pedalEvents.length - 1]?.down ?? false) === p.down) continue;
+    pedalEvents.push({ pos: Math.min(q(p.tick), Math.max(0, lastEnd)), down: p.down });
+  }
+  if (pedalEvents[pedalEvents.length - 1]?.down) pedalEvents.push({ pos: lastEnd, down: false });
+  const pedalList: { pos: number; type: PedalMark['type'] }[] = [];
+  for (let i = 0; i < pedalEvents.length; i++) {
+    const e = pedalEvents[i];
+    const next = pedalEvents[i + 1];
+    if (e.down) {
+      pedalList.push({ pos: e.pos, type: 'start' });
+    } else if (next && next.pos - e.pos <= 2) {
+      pedalList.push({ pos: e.pos, type: 'change' });
+      i++;
+    } else {
+      pedalList.push({ pos: e.pos, type: 'stop' });
+    }
+  }
+  // 画成左手谱下方的踏板线。真人弹奏录下来的踏板数据又密又碎，画出来没法看，那种只用于播放
+  const pedalMarks: PedalMark[][] = measures.map(() => []);
+  const drawPedal = pedalList.length <= measures.length * 8;
+  for (const p of pedalList) {
+    const mi = measureAt(p.pos);
+    if (drawPedal) {
+      pedalMarks[mi].push({ offset: p.pos - measures[mi].start, type: p.type });
+      continue;
+    }
+    const sound = (down: boolean): string => `<sound damper-pedal="${down ? 'yes' : 'no'}">${offsetXml(p.pos, mi)}</sound>`;
+    if (p.type !== 'start') extras[mi].push(sound(false));
+    if (p.type !== 'stop') extras[mi].push(sound(true));
+  }
+  const pedalXml = (type: PedalMark['type'], offset: number): string =>
+    `<direction placement="below"><direction-type><pedal type="${type}" line="yes"/></direction-type>` +
+    `${offset ? `<offset>${offset}</offset>` : ''}<staff>2</staff></direction>`;
 
   const body = measures
     .map((m, mi) => {
@@ -476,7 +537,16 @@ export function midiToMusicXml(midi: MidiFile, title: string, composer = ''): Mi
       parts.push(...extras[mi]);
       for (const piece of staffPieces[0][mi]) parts.push(pieceXml(piece, 1, 1, keys[mi]));
       parts.push(`<backup><duration>${m.len}</duration></backup>`);
-      for (const piece of staffPieces[1][mi]) parts.push(pieceXml(piece, 2, 5, keys[mi]));
+      // 踏板记号插在它所在的那个音符前面；不在音符起点上的，用 offset 记下差多少
+      const marks = pedalMarks[mi];
+      let at = 0;
+      let k = 0;
+      for (const piece of staffPieces[1][mi]) {
+        for (; k < marks.length && marks[k].offset < at + piece.dur; k++) parts.push(pedalXml(marks[k].type, marks[k].offset - at));
+        parts.push(pieceXml(piece, 2, 5, keys[mi]));
+        at += piece.dur;
+      }
+      for (; k < marks.length; k++) parts.push(pedalXml(marks[k].type, marks[k].offset - at));
       if (mi === measures.length - 1) parts.push('<barline location="right"><bar-style>light-heavy</bar-style></barline>');
       parts.push('</measure>');
       return parts.join('');
@@ -491,5 +561,5 @@ export function midiToMusicXml(midi: MidiFile, title: string, composer = ''): Mi
     '<part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>' +
     `<part id="P1">\n${body}\n</part></score-partwise>\n`;
 
-  return { xml, warnings, durations };
+  return { xml, warnings, durations, levels };
 }

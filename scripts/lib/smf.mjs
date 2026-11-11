@@ -89,6 +89,14 @@ export const trackName = (text) => {
   const b = Array.from(new TextEncoder().encode(text));
   return { tick: 0, bytes: [0xff, 0x03, b.length, ...b], order: -1 };
 };
+const textEvent = (type) => (tick, text) => {
+  const b = Array.from(new TextEncoder().encode(text));
+  return { tick, bytes: [0xff, type, b.length, ...b], order: -1 };
+};
+/** 段落标记（前奏、副歌……），转谱时用粗体写在谱面上方 */
+export const marker = textEvent(0x06);
+/** 演奏提示（渐强……），转谱时用斜体写在谱面上方 */
+export const cue = textEvent(0x07);
 export const tempo = (tick, bpm) => {
   const us = Math.round(60e6 / bpm);
   return { tick, bytes: [0xff, 0x51, 3, (us >> 16) & 0xff, (us >> 8) & 0xff, us & 0xff], order: -1 };

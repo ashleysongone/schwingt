@@ -16,6 +16,8 @@ export interface NoteEvent {
   voice: string;
   grace: boolean;
   fingering?: string;
+  /** 相对力度：1 是这只手平常的力度，大于 1 更响。谱子里没有力度信息时不填 */
+  level?: number;
 }
 
 export type PedalType = 'start' | 'stop' | 'change';

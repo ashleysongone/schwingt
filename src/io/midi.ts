@@ -1,4 +1,4 @@
-/** 标准 MIDI 文件（.mid）的读取。只取练琴用得上的内容：音符、速度、拍号、调号、延音踏板。 */
+/** 标准 MIDI 文件（.mid）的读取。只取练琴用得上的内容：音符、速度、拍号、调号、延音踏板、段落标记。 */
 
 export interface MidiNote {
   tick: number;
@@ -19,6 +19,8 @@ export interface MidiFile {
   timeSigs: { tick: number; beats: number; beatType: number }[];
   keySigs: { tick: number; fifths: number; minor: boolean }[];
   pedals: { tick: number; down: boolean }[];
+  /** 写在曲子里的文字：marker 是段落名（前奏、副歌……），cue 是演奏提示（渐强……） */
+  texts: { tick: number; text: string; kind: 'marker' | 'cue' }[];
 }
 
 export function isMidi(data: ArrayBuffer): boolean {
@@ -60,6 +62,7 @@ export function parseMidi(data: ArrayBuffer): MidiFile {
     timeSigs: [],
     keySigs: [],
     pedals: [],
+    texts: [],
   };
 
   const readVar = (end: number): number => {
@@ -110,7 +113,10 @@ export function parseMidi(data: ArrayBuffer): MidiFile {
         const n = readVar(end);
         const body = bytes.subarray(p, Math.min(p + n, end));
         if (type === 0x03 && !name) name = decodeText(body);
-        else if (type === 0x51 && body.length >= 3) {
+        else if (type === 0x06 || type === 0x07) {
+          const text = decodeText(body);
+          if (text) file.texts.push({ tick, text, kind: type === 0x06 ? 'marker' : 'cue' });
+        } else if (type === 0x51 && body.length >= 3) {
           const us = (body[0] << 16) | (body[1] << 8) | body[2];
           if (us > 0) file.tempos.push({ tick, bpm: 60_000_000 / us });
         } else if (type === 0x58 && body.length >= 2) {
@@ -151,5 +157,6 @@ export function parseMidi(data: ArrayBuffer): MidiFile {
   file.timeSigs.sort((a, b) => a.tick - b.tick);
   file.keySigs.sort((a, b) => a.tick - b.tick);
   file.pedals.sort((a, b) => a.tick - b.tick);
+  file.texts.sort((a, b) => a.tick - b.tick);
   return file;
 }

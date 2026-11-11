@@ -4,6 +4,7 @@ import { Player } from './audio/player';
 import { listScores, loadScoreFile, removeImported, saveImported, LibraryItem, ScoreFile } from './io/library';
 import { interpret, OpenedScore } from './io/open';
 import { withLabels } from './model/labels';
+import { addLyrics, lyricLength, lyricSlots, lyricTokens } from './model/lyrics';
 import { unroll } from './model/sequence';
 import { keyName, labelFor, LABEL_MODES, LabelMode } from './model/solfege';
 import { Timeline } from './model/timeline';
@@ -55,6 +56,31 @@ function saveSettings(): void {
   }
 }
 
+// ---------- 歌词 ----------
+// 歌词是使用者自己贴进来的，按曲子存在本机，不进谱子文件
+
+const LYRICS_KEY = 'schwingt.lyrics.v1';
+
+function loadLyrics(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(LYRICS_KEY);
+    if (raw) return JSON.parse(raw) as Record<string, string>;
+  } catch {
+    // 读不到就当没有
+  }
+  return {};
+}
+
+const lyricsById = loadLyrics();
+
+function saveLyrics(): void {
+  try {
+    localStorage.setItem(LYRICS_KEY, JSON.stringify(lyricsById));
+  } catch {
+    // 存不了时这次照样显示，只是下次打开要重新贴
+  }
+}
+
 // ---------- 界面元素 ----------
 
 function $<T extends HTMLElement = HTMLElement>(id: string): T {
@@ -92,6 +118,10 @@ const labelModeSelect = $<HTMLSelectElement>('label-mode');
 const libraryDialog = $<HTMLDialogElement>('library');
 const libraryList = $('library-list');
 const fileInput = $<HTMLInputElement>('file');
+const btnLyrics = $('btn-lyrics');
+const lyricsDialog = $<HTMLDialogElement>('lyrics');
+const lyricsText = $<HTMLTextAreaElement>('lyrics-text');
+const lyricsStatus = $('lyrics-status');
 
 // ---------- 状态 ----------
 
@@ -108,6 +138,8 @@ let timeline: Timeline | undefined;
 let currentId: string | undefined;
 /** 当前的五线谱是从 MIDI 自动转出来的 */
 let generated = false;
+/** 当前的谱子用得上多少个字的歌词；0 表示谱子里没标歌词位置 */
+let lyricRoom = 0;
 /** 选出来反复练的小节范围 */
 let region: { from: number; to: number } | undefined;
 /** 正在选段：还没点起点时 from 为空 */
@@ -173,6 +205,8 @@ function labelTracks(): Set<number> {
 async function renderScore(): Promise<void> {
   if (!sourceDoc || !score) return;
   const doc = withLabels(sourceDoc, { mode: settings.labelMode, tracks: labelTracks() });
+  const words = currentId && lyricRoom ? lyricsById[currentId] : undefined;
+  if (words) addLyrics(doc, lyricTokens(words));
   await view.load(doc, generated);
   const mine = unroll(score.measures);
   const theirs = view.measureOrder;
@@ -200,6 +234,8 @@ async function showScore(opened: OpenedScore, id: string, fallbackTitle = ''): P
   score = parsed;
   generated = opened.generated;
   currentId = id;
+  lyricRoom = lyricLength(lyricSlots(opened.doc));
+  updateLyricsButton();
   region = undefined;
   selecting = undefined;
   player.loop = false;
@@ -226,6 +262,9 @@ async function showScore(opened: OpenedScore, id: string, fallbackTitle = ''): P
     hint(['这份五线谱是从 MIDI 自动转出来的，记谱和正式谱子会有出入', ...opened.warnings].join('；'), {
       duration: opened.warnings.length ? 9000 : 4500,
     });
+  } else {
+    // 上一首曲子留下的提示不该挂在这一首上
+    clearHint();
   }
 }
 
@@ -321,6 +360,37 @@ async function toggleLabels(track: number): Promise<void> {
   else settings.labelsOff.push(track);
   saveSettings();
   updateHands();
+  await withBusy('正在重新排版…', renderScore);
+}
+
+// ---------- 歌词窗口 ----------
+
+function updateLyricsButton(): void {
+  btnLyrics.hidden = !lyricRoom;
+  btnLyrics.classList.toggle('on', !!(currentId && lyricsById[currentId]));
+}
+
+function updateLyricsStatus(): void {
+  const have = lyricTokens(lyricsText.value).length;
+  lyricsStatus.textContent = !have ? '还没有歌词' : have < lyricRoom ? `现在有 ${have} 个字，后面 ${lyricRoom - have} 个音下面会空着` : `现在有 ${have} 个字，够用了`;
+}
+
+function showLyrics(): void {
+  if (!currentId || !lyricRoom) return;
+  lyricsText.value = lyricsById[currentId] ?? '';
+  $('lyrics-need').textContent = String(lyricRoom);
+  updateLyricsStatus();
+  if (!lyricsDialog.open) lyricsDialog.showModal();
+}
+
+async function saveLyricsText(): Promise<void> {
+  if (!currentId) return;
+  const words = lyricsText.value.trim();
+  if (words) lyricsById[currentId] = words;
+  else delete lyricsById[currentId];
+  saveLyrics();
+  lyricsDialog.close();
+  updateLyricsButton();
   await withBusy('正在重新排版…', renderScore);
 }
 
@@ -596,6 +666,16 @@ function wire(): void {
     void withBusy('正在重新排版…', renderScore);
   });
 
+  btnLyrics.addEventListener('click', showLyrics);
+  $('btn-lyrics-close').addEventListener('click', () => lyricsDialog.close());
+  $('btn-lyrics-save').addEventListener('click', () => void saveLyricsText());
+  $('btn-lyrics-clear').addEventListener('click', () => {
+    lyricsText.value = '';
+    updateLyricsStatus();
+    lyricsText.focus();
+  });
+  lyricsText.addEventListener('input', updateLyricsStatus);
+
   $('btn-zoom-out').addEventListener('click', () => setZoom(settings.zoom - 0.1));
   $('btn-zoom-in').addEventListener('click', () => setZoom(settings.zoom + 0.1));
 
@@ -605,7 +685,7 @@ function wire(): void {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (libraryDialog.open || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (libraryDialog.open || lyricsDialog.open || e.ctrlKey || e.metaKey || e.altKey) return;
     const tag = (e.target as HTMLElement).tagName;
     if (tag === 'SELECT' || tag === 'INPUT') {
       if (e.code !== 'Space') return;
