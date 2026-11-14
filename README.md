@@ -47,6 +47,7 @@ node scripts/e2e.mjs                     用本机 Edge 无界面跑一遍主要
 node scripts/check-score.mjs <谱子文件>   导入一份谱子，核对解析和光标定位（需要先启动开发服务）
 node scripts/make-demo.mjs               重新生成示例曲
 node scripts/make-c-fanfangxiang.mjs     重新生成《反方向的钟》C 调版（手工编配，音符直接写在脚本里）
+node scripts/make-c-compact-fanfangxiang.mjs  重新生成《反方向的钟》C 调小跨度版（C 调版只改左手）
 node scripts/make-easy-fanfangxiang.mjs  重新生成《反方向的钟》C 调入门版（同上，更简单的一版）
 node scripts/check-repo.mjs              提交前检查（见下）
 ```
@@ -90,6 +91,10 @@ git config core.hooksPath .githooks
   导歌照原曲用半音下行的低音和 E 大三和弦（全曲只有这里用到升 sol、升 fa 两个黑键），
   第二遍副歌高八度，进副歌前有渐强和一拍一个的重音和弦；67 小节，重复的段落完全一样。
   谱面带力度、踏板线、和弦名、指法，并标了歌词位置（歌词本身不在文件里）
+- 《反方向的钟（C 调小跨度版）》：手工编配，音符写在 `scripts/make-c-compact-fanfangxiang.mjs` 里，生成 MusicXML。
+  和 C 调版是同一份编配，结构、旋律、和声、力度都一样，只改了左手：C 调版的左手要够到十度，
+  这一版把音型搬到中音区，收在一个手位里（F、G 不超过五度，Am7 六度），换和弦时手只挪一个键；
+  进副歌前的重音和弦从八度改成双音。右手只把第一遍副歌里垫在旋律下面的几个 mi 换成 sol 或去掉，给左手让位
 - 《反方向的钟（C 调入门版）》：手工编配，音符写在 `scripts/make-easy-fanfangxiang.mjs` 里，生成 MusicXML。
   右手是人声旋律（对照上面那份扒谱，移到 C 调，节奏照原曲），左手是一个两小节的固定音型，
   谱面带和弦标记、踏板线和指法；收前奏、主歌、导歌、副歌（反复一遍）和尾奏，共 31 小节
