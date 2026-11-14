@@ -50,12 +50,13 @@ const RIFF = 'A5:2/5 G5:2/4 E5:2/2 D5:2~/1 D5:2 A4:2/5 G4:2/4 E4:2~/2';
 const RIFF_FOURTHS = 'A5+E5:2 G5+D5:2 E5+A4:2 D5+G4:2~ D5+G4:2 A4:2 G4:2 E4:2~';
 /** 动机的后半句，停在 sol 上，像一句问话 */
 const ASK = 'E4:2 D4:2/1 E4:2/2 G4:2~/4 G4:8';
-/** 动机的后半句，落到 la 上，像回答 */
-const ANSWER = 'E4:2 D4:2 E4:2 G4:2 A4:8';
-/** 主歌四个字一组的念唱：mi re mi mi，第三个字提前进来 */
+/**
+ * 主歌的念唱，半小节一组：mi re mi – mi。四个字一句的歌词是从上一组最后那个 mi 起唱的（弱起），
+ * 所以一组里是“上一句的第二、三、四个字，下一句的第一个字”，押韵的字落在提前进来、拖长的那个 mi 上
+ */
 const CELL = 'E5:2 D5:1 E5:1~ E5:2 E5:2';
 /**
- * 同一组配上和弦：第一个字弹三个音，第三个字后面的空当补两个音（不对歌词）。
+ * 同一组配上和弦：第一个音弹三个音，拖长的那个字下面补两个音（不对歌词）。
  * F 和 Am 上是 la do mi，G 上是 sol ti mi，全曲的主歌只有这两个手型
  */
 const CELL_A = 'E5+C5+A4:2 D5:1 E5:1 C5+A4:2_ E5:2';
@@ -68,21 +69,23 @@ const intro = [
   { level: 0.5, rh: RIFF, lh: 'F2:4/5 C3:4/1 G2:4/5 D3:4/1', chords: 'F@0 G@8', pedal: HALVES },
   { level: 0.5, rh: ASK, ...swingAm },
   { dyn: 'p', level: 0.62, rh: RIFF_FOURTHS, ...swingFG },
-  { level: 0.62, rh: ANSWER, ...swingAm },
+  // 最后半拍的 mi 是主歌第一个字，弱起
+  { level: 0.62, rh: 'E4:2_ D4:2_ E4:2_ G4:2_ A4:6_ E5:2/3', ...swingAm, sing: 'verse' },
 ];
 
 const verse = [
   // 前四小节：单音旋律，左手还是钟摆
-  { label: '主歌', dyn: 'mp', level: 0.78, rh: `E5:2/3 D5:1/2 E5:1~ E5:2 E5:2 ${CELL}`, ...swingFG },
+  { label: '主歌', dyn: 'mp', level: 0.78, rh: `E5:2/3 D5:1/2 E5:1~/3 E5:2 E5:2 ${CELL}`, ...swingFG },
   { level: 0.78, rh: `${CELL} ${CELL}`, ...swingAm },
   { level: 0.8, rh: `${CELL} ${CELL}`, ...swingFG },
   { level: 0.82, rh: `${CELL} ${CELL}`, ...swingAm },
   // 后四小节加一层：右手配上和弦，左手变成半拍一个音，张开到八度
   { cue: '加一层', level: 0.88, rh: `E5+C5+A4:2/5 D5:1/4 E5:1/5 C5+A4:2_ E5:2 ${CELL_G}`, ...rollFG, lh: 'F2:2/5 C3:2/2 F3:2/1 C3:2/2 G2:2/5 D3:2/2 G3:2/1 D3:2/2' },
-  // 这一小节后半句多一个字，从 do 爬上来
-  { level: 0.9, rh: 'E5+C5+A4:2 D5:1 E5:1 C5+A4:2_ E5:1 C5:1/1 D5:2 E5:2 E5:2 E5:2', ...rollAm },
+  // 这一小节里有一句是五个字（我不再受宠）：多出来的字挤在第二拍后半，mi do 两个十六分音符
+  { level: 0.9, rh: 'E5+C5+A4:2 D5:1 E5:1 C5+A4:2_ E5:1 C5:1/1 D5:2 E5:1 E5:1 C5+A4:2_ E5:2', ...rollAm },
   { level: 0.92, rh: `${CELL_A} ${CELL_G}`, ...rollFG },
-  { level: 0.94, rh: `${CELL_A} ${CELL_A}`, ...rollAm },
+  // 最后一句唱完就停住，不再起下一句
+  { level: 0.94, rh: `${CELL_A} E5+C5+A4:2 D5:1 E5:1 C5+A4:4_`, ...rollAm },
 ].map((bar) => ({ ...bar, sing: 'verse' }));
 
 /**
