@@ -72,6 +72,25 @@ function loadLyrics(): Record<string, string> {
 }
 
 const lyricsById = loadLyrics();
+/** 从 public/lyrics 里读到的歌词，按曲子记着；浏览器里贴过的优先 */
+const lyricsFromFile: Record<string, string> = {};
+const lyricsOf = (id: string | undefined): string | undefined => (id ? (lyricsById[id] ?? lyricsFromFile[id]) : undefined);
+
+/**
+ * 自带曲库的曲子，去 lyrics/<id>.txt 找一份歌词。这个文件夹是使用者自己放的，不进仓库；
+ * 开着开发服务时别的设备也读得到，不用每台设备各贴一次。
+ */
+async function fetchLyricsFile(id: string): Promise<void> {
+  if (!id.startsWith('builtin:') || id in lyricsFromFile) return;
+  try {
+    const res = await fetch(`lyrics/${encodeURIComponent(id.slice('builtin:'.length))}.txt`);
+    // 开发服务对不存在的文件会回一张网页，只认纯文本
+    const text = res.ok && (res.headers.get('content-type') ?? '').startsWith('text/plain') ? (await res.text()).trim() : '';
+    if (text) lyricsFromFile[id] = text;
+  } catch {
+    // 没有这个文件就算了
+  }
+}
 
 function saveLyrics(): void {
   try {
@@ -205,7 +224,7 @@ function labelTracks(): Set<number> {
 async function renderScore(): Promise<void> {
   if (!sourceDoc || !score) return;
   const doc = withLabels(sourceDoc, { mode: settings.labelMode, tracks: labelTracks() });
-  const words = currentId && lyricRoom ? lyricsById[currentId] : undefined;
+  const words = lyricRoom ? lyricsOf(currentId) : undefined;
   if (words) addLyrics(doc, lyricTokens(words));
   await view.load(doc, generated);
   const mine = unroll(score.measures);
@@ -235,6 +254,7 @@ async function showScore(opened: OpenedScore, id: string, fallbackTitle = ''): P
   generated = opened.generated;
   currentId = id;
   lyricRoom = lyricLength(lyricSlots(opened.doc));
+  if (lyricRoom) await fetchLyricsFile(id);
   updateLyricsButton();
   region = undefined;
   selecting = undefined;
@@ -368,7 +388,7 @@ async function toggleLabels(track: number): Promise<void> {
 
 function updateLyricsButton(): void {
   btnLyrics.hidden = !lyricRoom;
-  btnLyrics.classList.toggle('on', !!(currentId && lyricsById[currentId]));
+  btnLyrics.classList.toggle('on', !!lyricsOf(currentId));
 }
 
 function updateLyricsStatus(): void {
@@ -378,7 +398,7 @@ function updateLyricsStatus(): void {
 
 function showLyrics(): void {
   if (!currentId || !lyricRoom) return;
-  lyricsText.value = lyricsById[currentId] ?? '';
+  lyricsText.value = lyricsOf(currentId) ?? '';
   $('lyrics-need').textContent = String(lyricRoom);
   // 曲名去掉括号里的版本说明再去搜；搜索词里带上常用的歌词站，它的结果会排在前面
   const song = (score?.title ?? '').replace(/[（(].*$/, '').trim();

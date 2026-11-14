@@ -9,3 +9,6 @@ scores-raw/
 
 # Claude Code 的本机设置
 .claude/
+
+# 自己放的歌词文本（有版权，不进仓库）
+public/lyrics/

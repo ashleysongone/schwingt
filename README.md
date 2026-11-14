@@ -19,7 +19,9 @@
 - 逐个音前进后退（← →），点谱面上的音符可以直接跳过去并听到它
 - 唱名：每只手单独开关，可选固定调、首调、简谱数字、音名
 - 歌词：谱子里标了歌词位置的曲子，工具栏会出现“歌词”按钮。把歌词贴进去，就按字写到旋律的音符下面。
-  歌词只存在本机的浏览器里，不进谱子文件，换一台设备要再贴一次
+  贴进去的歌词只存在这台设备的浏览器里，不进谱子文件。
+  想让电脑和平板都能看到，就把歌词存成文本文件放在 `public/lyrics/` 里，文件名是曲子的 id 加 `.txt`
+  （比如 `public/lyrics/fanfangxiang-de-zhong-custom.txt`），打开曲子时会自动读进来；这个文件夹不进仓库
 - 播放有轻重：谱子里带力度信息时按它发声
 - 屏幕键盘按左右手着色显示当前要按的键
 
@@ -46,11 +48,7 @@ npm run build                            类型检查并打包到 dist/
 node scripts/e2e.mjs                     用本机 Edge 无界面跑一遍主要功能（需要先启动开发服务）
 node scripts/check-score.mjs <谱子文件>   导入一份谱子，核对解析和光标定位（需要先启动开发服务）
 node scripts/make-demo.mjs               重新生成示例曲
-node scripts/make-c-fanfangxiang.mjs     重新生成《反方向的钟》C 调版（手工编配，音符直接写在脚本里）
-node scripts/make-custom-fanfangxiang.mjs     重新生成《反方向的钟》专属编配（按我的手重新编的一版）
-node scripts/make-c-compact-fanfangxiang.mjs  重新生成《反方向的钟》C 调小跨度版（C 调版只改左手）
-node scripts/make-cover-fanfangxiang.mjs  重新生成《反方向的钟》钢琴演奏版和它的简化版（从录音扒的谱）
-node scripts/make-easy-fanfangxiang.mjs  重新生成《反方向的钟》C 调入门版（同上，更简单的一版）
+node scripts/make-custom-fanfangxiang.mjs 重新生成《反方向的钟》专属编配（按我的手重新编的一版）
 node scripts/check-repo.mjs              提交前检查（见下）
 ```
 
@@ -76,7 +74,6 @@ git config core.hooksPath .githooks
 - `src/view` 谱面显示和屏幕键盘
 - `public/scores` 自带曲库，`index.json` 是目录
 - `public/samples/piano` 钢琴采样
-- `scripts/data` 扒谱得到的音符数据
 - `scripts` 生成谱子和检查用的小工具；`scripts/lib/score.mjs` 把手写的小节记号写成 MusicXML，记法见文件开头
 - `scores-raw` 下载的原始谱子文件和备选版本（不进仓库）
 
@@ -84,33 +81,14 @@ git config core.hooksPath .githooks
 
 钢琴采样取自 Salamander Grand Piano V3（Alexander Holm，CC BY 3.0），经 Tone.js 项目整理。
 
-曲库里三首曲子的 MIDI 都是网友扒的谱，只用于个人练习：
+曲库里的《晴天》和《The Truth That You Leave》是网友扒的 MIDI，只用于个人练习：
 
 - 《晴天》：GitHub 上 AutoPiano 项目里的 `static/midi/晴天.mid`
 - 《The Truth That You Leave》：OnlineSequencer 上的公开序列 5559401，按网站的导出规则转成 MIDI
-- 《反方向的钟》：OnlineSequencer 上的公开序列 3955810，同样转成 MIDI
-- 《反方向的钟（C 调版）》：手工编配，音符写在 `scripts/make-c-fanfangxiang.mjs` 里，生成 MusicXML。
-  素材对照上面那份扒谱（移到 C 调）：旋律和节奏照原曲，左手是一个用到底的分解和弦音型，
-  导歌照原曲用半音下行的低音和 E 大三和弦（全曲只有这里用到升 sol、升 fa 两个黑键），
-  第二遍副歌高八度，进副歌前有渐强和一拍一个的重音和弦；67 小节，重复的段落完全一样。
-  谱面带力度、踏板线、和弦名、指法，并标了歌词位置（歌词本身不在文件里）
 - 《反方向的钟（专属编配）》：手工编配，音符写在 `scripts/make-custom-fanfangxiang.mjs` 里，生成 MusicXML。
   旋律和节奏照原曲，其余按我的手和喜好重新编：左手够得到八度但不想跳，所以每个和弦一个手位（根音、五度、八度分开弹），
   换和弦只挪一个键，同时按下的八度全曲只有进副歌前那四下；右手副歌是三个音的和弦，长音先弹、另外两个音在拍点上补进去；
   从主歌到副歌每四小节加一层，最后是 E 上双手的和弦、停顿的重音和一串十六分音符冲进副歌；
-  左手根音、五度来回的“钟摆”贯穿前奏、主歌、间奏和尾奏，尾奏把前奏的动机倒过来弹一遍。68 小节，结构和 C 调版一样
-- 《反方向的钟（C 调小跨度版）》：手工编配，音符写在 `scripts/make-c-compact-fanfangxiang.mjs` 里，生成 MusicXML。
-  和 C 调版是同一份编配，结构、旋律、和声、力度都一样，只改了左手：C 调版的左手要够到十度，
-  这一版把音型搬到中音区，收在一个手位里（F、G 不超过五度，Am7 六度），换和弦时手只挪一个键；
-  进副歌前的重音和弦从八度改成双音。右手只把第一遍副歌里垫在旋律下面的几个 mi 换成 sol 或去掉，给左手让位
-- 《反方向的钟（钢琴演奏版）》和《反方向的钟（钢琴演奏版·简化）》：从 B 站上一段钢琴演奏的录音扒的谱。
-  录音用 transkun（钢琴转谱模型）转成 MIDI，再对齐到十六分音符的网格，结果存在 `scripts/data/fanfangxiang-cover.json` 里；
-  `scripts/make-cover-fanfangxiang.mjs` 从这份数据生成两份 MusicXML。前奏和尾奏是自由速度弹的，按乐句摆回了拍子上。
-  原版照录音记（降 B 大调），只做分手和记谱整理，机器转的谱个别音会有出入；
-  简化版移到 C 调，右手只留旋律、拍点上最多垫一个音，高八度的主题降回中音区，
-  左手换成每半小节一个根音加一个双音（手位不超过六度），进副歌前一小节很绕的节奏改成了一拍两个音
-- 《反方向的钟（C 调入门版）》：手工编配，音符写在 `scripts/make-easy-fanfangxiang.mjs` 里，生成 MusicXML。
-  右手是人声旋律（对照上面那份扒谱，移到 C 调，节奏照原曲），左手是一个两小节的固定音型，
-  谱面带和弦标记、踏板线和指法；收前奏、主歌、导歌、副歌（反复一遍）和尾奏，共 31 小节
+  左手根音、五度来回的“钟摆”贯穿前奏、主歌、间奏和尾奏，尾奏把前奏的动机倒过来弹一遍。旋律对照 OnlineSequencer 上的公开序列 3955810（移到 C 调）。68 小节，标了歌词位置（歌词本身不在文件里）
 
 这些曲子的版权归原作者所有，扒谱只供个人练习，请不要拿去商用。

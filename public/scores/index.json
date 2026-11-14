@@ -21,48 +21,6 @@
     "note": "按我的手重新编的一版，C 调，68 小节。左手不跳：每个和弦一个手位，最宽八度，换和弦只挪一个键；右手副歌是三个音的和弦；从主歌到副歌一层层推上去；尾奏把前奏的动机倒过来弹。带力度、踏板线、和弦名和指法，可以贴歌词"
   },
   {
-    "id": "fanfangxiang-de-zhong-c",
-    "title": "反方向的钟（C 调版）",
-    "composer": "周杰伦",
-    "file": "fanfangxiang-de-zhong-c.musicxml",
-    "note": "手工编配，67 小节：前奏、主歌、导歌、副歌两遍（第二遍高八度）、间奏，再来一轮，尾奏。左手一个音型用到底，只有导歌用到两个黑键；带力度、踏板线、和弦名和指法，可以贴歌词"
-  },
-  {
-    "id": "fanfangxiang-de-zhong-c-compact",
-    "title": "反方向的钟（C 调小跨度版）",
-    "composer": "周杰伦",
-    "file": "fanfangxiang-de-zhong-c-compact.musicxml",
-    "note": "和 C 调版同一份编配，只改左手：音型收在中音区的一个手位里，最宽六度，换和弦只挪一个键，没有八度和十度。低音比 C 调版薄一点"
-  },
-  {
-    "id": "fanfangxiang-de-zhong-easy",
-    "title": "反方向的钟（C 调入门版）",
-    "composer": "周杰伦",
-    "file": "fanfangxiang-de-zhong-easy.musicxml",
-    "note": "手工编配，31 小节：右手单音旋律，左手一个两小节的固定音型，带和弦标记、踏板线和指法"
-  },
-  {
-    "id": "fanfangxiang-de-zhong-cover-easy",
-    "title": "反方向的钟（钢琴演奏版·简化）",
-    "composer": "周杰伦",
-    "file": "fanfangxiang-de-zhong-cover-easy.musicxml",
-    "note": "从一段钢琴演奏录音扒的谱，移到 C 调并简化，105 小节：右手是旋律，拍点上最多垫一个音；左手每半小节一个根音加一个双音，手位不超过六度。导歌用到升 sol、升 fa"
-  },
-  {
-    "id": "fanfangxiang-de-zhong-cover",
-    "title": "反方向的钟（钢琴演奏版）",
-    "composer": "周杰伦",
-    "file": "fanfangxiang-de-zhong-cover.musicxml",
-    "note": "从一段钢琴演奏录音扒的谱，照录音记，降 B 大调，105 小节。左手是低音八度加和弦的大跳，难。机器转的谱，个别音会有出入"
-  },
-  {
-    "id": "fanfangxiang-de-zhong",
-    "title": "反方向的钟（完整扒谱）",
-    "composer": "周杰伦",
-    "file": "fanfangxiang-de-zhong.mid",
-    "note": "原调降 B 大调，整首歌的密集扒谱，左右手是按音高自动分的，很难"
-  },
-  {
     "id": "twinkle",
     "title": "小星星",
     "composer": "传统儿歌",

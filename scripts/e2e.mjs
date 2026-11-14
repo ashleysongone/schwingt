@@ -227,9 +227,7 @@ await page.click('#btn-library-close');
 for (const [title, slug] of [
   ['晴天', 'qingtian'],
   ['The Truth That You Leave', 'truth'],
-  ['反方向的钟（C 调版）', 'fanfangxiang-c'],
-  ['反方向的钟（C 调入门版）', 'fanfangxiang-easy'],
-  ['反方向的钟（完整扒谱）', 'fanfangxiang'],
+  ['反方向的钟（专属编配）', 'fanfangxiang-custom'],
 ]) {
   await openFromLibrary(title);
   const song = await page.evaluate(() => {
