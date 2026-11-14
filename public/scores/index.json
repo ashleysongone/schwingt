@@ -14,6 +14,13 @@
     "note": "由 MIDI 自动转谱，左右手是分好的"
   },
   {
+    "id": "fanfangxiang-de-zhong-custom",
+    "title": "反方向的钟（专属编配）",
+    "composer": "周杰伦",
+    "file": "fanfangxiang-de-zhong-custom.musicxml",
+    "note": "按我的手重新编的一版，C 调，68 小节。左手不跳：每个和弦一个手位，最宽八度，换和弦只挪一个键；右手副歌是三个音的和弦；从主歌到副歌一层层推上去；尾奏把前奏的动机倒过来弹。带力度、踏板线、和弦名和指法，可以贴歌词"
+  },
+  {
     "id": "fanfangxiang-de-zhong-c",
     "title": "反方向的钟（C 调版）",
     "composer": "周杰伦",
