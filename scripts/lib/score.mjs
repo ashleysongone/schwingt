@@ -4,7 +4,7 @@
 //   rh / lh   右手、左手的音符。记法：音名:时值，时值以十六分音符为单位，一小节是 16。
 //             后面可以跟 ~（和下一个同音高的音连起来）、/数字（指法）、^（延长记号）、_（这个音不对歌词）。
 //             r 是休止，和弦用 + 连接，最高音写在前面。
-//   chords    和弦标记，'F@0 G@8'：@ 后面是小节里的位置。支持 m、7、m7、maj7、sus4、sus2 和 / 低音
+//   chords    和弦标记，'F@0 G@8'：@ 后面是小节里的位置。支持 m、7、m7、m7b5、maj7、sus4、sus2 和 / 低音
 //   pedal     踏板，'start@0 change@8 stop@16'
 //   label     段落名（粗体）；cue 演奏提示（斜体）；dyn 力度记号（pp、p、mp、mf、f、ff），都写在小节开头
 //   wedge     'crescendo' / 'diminuendo' 从这一小节开头画渐强、渐弱的开口线，'stop' 在这一小节开头结束
@@ -13,6 +13,7 @@
 //   level     播放力度，1 是平常（中强）。写成 [从, 到] 就在这一小节里平滑过渡
 //   sing      这一小节的旋律对歌词，值是歌词段落的名字；同名段落再次出现时用同一段歌词
 //   repeat    'start' / 'end' 反复记号
+// 整份谱子另有 key：调号，正数是几个升号，负数是几个降号，不写就是 C 大调。
 import { writeFileSync } from 'node:fs';
 
 /** 每个四分音符分成 4 份：时值 1 就是十六分音符 */
@@ -36,6 +37,7 @@ const KIND = {
   m: ['minor', 'm'],
   7: ['dominant', '7'],
   m7: ['minor-seventh', 'm7'],
+  m7b5: ['half-diminished', 'm7♭5'],
   maj7: ['major-seventh', 'maj7'],
   sus4: ['suspended-fourth', 'sus4'],
   sus2: ['suspended-second', 'sus2'],
@@ -128,7 +130,7 @@ function computeBeams(items) {
 }
 
 function harmonyXml(name) {
-  const m = /^([A-G])([#b]?)(m7|maj7|sus4|sus2|m|7)?(?:\/([A-G])([#b]?))?$/.exec(name);
+  const m = /^([A-G])([#b]?)(m7b5|m7|maj7|sus4|sus2|m|7)?(?:\/([A-G])([#b]?))?$/.exec(name);
   if (!m) throw new Error(`看不懂的和弦名 ${name}`);
   const alter = (s) => (s === '#' ? 1 : -1);
   const [kind, text] = KIND[m[3] ?? ''];
@@ -153,6 +155,13 @@ const wedgeXml = (type) => direction('below', 1, `<wedge type="${type}" number="
 // type="down" 的意思是谱面比实际音高低八度写，也就是平常说的 8va
 const ottavaXml = (type) => direction('above', 1, `<octave-shift type="${type === 'start' ? 'down' : 'stop'}" size="8" number="1"/>`);
 
+/** 调号里这个音名本来就带的升降：key 是升号（正）或降号（负）的个数 */
+function keyAlter(key, step) {
+  if (key > 0) return 'FCGDAEB'.indexOf(step) < key ? 1 : 0;
+  if (key < 0) return 'BEADGCF'.indexOf(step) < -key ? -1 : 0;
+  return 0;
+}
+
 /** 小节里某个位置的力度倍数 */
 function levelAt(level, pos) {
   if (level === undefined) return undefined;
@@ -160,7 +169,7 @@ function levelAt(level, pos) {
 }
 
 /** 一只手在一小节里的全部音符。state 跨小节保留：还没接上的连线、统计 */
-function handXml(items, { staff, voice, before, state, where, level }) {
+function handXml(items, { staff, voice, before, state, where, level, key = 0 }) {
   const beams = computeBeams(items);
   const altered = new Map(); // 这一小节里已经出现过的升降：'G2' -> 1
   const lines = [];
@@ -181,7 +190,7 @@ function handXml(items, { staff, voice, before, state, where, level }) {
     it.pitches.forEach((p, k) => {
       const stop = stops.has(pitchKey(p));
       const slot = `${p.step}${p.octave}`;
-      const shown = altered.get(slot) ?? 0;
+      const shown = altered.get(slot) ?? keyAlter(key, p.step);
       const accidental = !stop && p.alter !== shown ? ACCIDENTAL[p.alter] : '';
       altered.set(slot, p.alter);
       const notations = [
@@ -229,10 +238,10 @@ function collect(...lists) {
 }
 
 /**
- * @param {{ title: string, composer: string, software: string, tempo: number, bars: object[] }} spec
+ * @param {{ title: string, composer: string, software: string, tempo: number, key?: number, bars: object[] }} spec
  * @returns {{ xml: string, summary: string, slots: number }}
  */
-export function buildScore({ title, composer, software, tempo, bars }) {
+export function buildScore({ title, composer, software, tempo, key = 0, bars }) {
   const right = { open: new Set(), notes: [] };
   const left = { open: new Set(), notes: [] };
   /** 歌词位置：{ bar, pos, part, k }，k 是它在自己那一段歌词里是第几个字 */
@@ -248,7 +257,7 @@ export function buildScore({ title, composer, software, tempo, bars }) {
       lines.push(
         '      <attributes>',
         `        <divisions>${DIV}</divisions>`,
-        '        <key><fifths>0</fifths><mode>major</mode></key>',
+        `        <key><fifths>${key}</fifths><mode>major</mode></key>`,
         '        <time><beats>4</beats><beat-type>4</beat-type></time>',
         '        <staves>2</staves>',
         '        <clef number="1"><sign>G</sign><line>2</line></clef>',
@@ -272,10 +281,10 @@ export function buildScore({ title, composer, software, tempo, bars }) {
       bar.dyn ? [[0, dynXml(bar.dyn)]] : [],
       parseMarks(bar.chords).map(([pos, name]) => [pos, harmonyXml(name)]),
     );
-    lines.push(handXml(rhItems, { staff: 1, voice: 1, before: rhMarks, state: right, where: `${where}右手`, level: bar.level }));
+    lines.push(handXml(rhItems, { staff: 1, voice: 1, before: rhMarks, state: right, where: `${where}右手`, level: bar.level, key }));
     lines.push(`      <backup><duration>${BAR}</duration></backup>`);
     const lhMarks = collect(parseMarks(bar.pedal).map(([pos, type]) => [pos, pedalXml(type)]));
-    lines.push(handXml(parseHand(bar.lh, `${where}左手`), { staff: 2, voice: 5, before: lhMarks, state: left, where: `${where}左手`, level: bar.level }));
+    lines.push(handXml(parseHand(bar.lh, `${where}左手`), { staff: 2, voice: 5, before: lhMarks, state: left, where: `${where}左手`, level: bar.level, key }));
 
     // 歌词位置：这一小节旋律里每个新起的音对一个字，标了 _ 的和连线延续过来的不算
     if (bar.sing) {

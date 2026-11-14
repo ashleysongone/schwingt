@@ -48,6 +48,7 @@ node scripts/check-score.mjs <谱子文件>   导入一份谱子，核对解析�
 node scripts/make-demo.mjs               重新生成示例曲
 node scripts/make-c-fanfangxiang.mjs     重新生成《反方向的钟》C 调版（手工编配，音符直接写在脚本里）
 node scripts/make-c-compact-fanfangxiang.mjs  重新生成《反方向的钟》C 调小跨度版（C 调版只改左手）
+node scripts/make-cover-fanfangxiang.mjs  重新生成《反方向的钟》钢琴演奏版和它的简化版（从录音扒的谱）
 node scripts/make-easy-fanfangxiang.mjs  重新生成《反方向的钟》C 调入门版（同上，更简单的一版）
 node scripts/check-repo.mjs              提交前检查（见下）
 ```
@@ -74,6 +75,7 @@ git config core.hooksPath .githooks
 - `src/view` 谱面显示和屏幕键盘
 - `public/scores` 自带曲库，`index.json` 是目录
 - `public/samples/piano` 钢琴采样
+- `scripts/data` 扒谱得到的音符数据
 - `scripts` 生成谱子和检查用的小工具；`scripts/lib/score.mjs` 把手写的小节记号写成 MusicXML，记法见文件开头
 - `scores-raw` 下载的原始谱子文件和备选版本（不进仓库）
 
@@ -95,6 +97,12 @@ git config core.hooksPath .githooks
   和 C 调版是同一份编配，结构、旋律、和声、力度都一样，只改了左手：C 调版的左手要够到十度，
   这一版把音型搬到中音区，收在一个手位里（F、G 不超过五度，Am7 六度），换和弦时手只挪一个键；
   进副歌前的重音和弦从八度改成双音。右手只把第一遍副歌里垫在旋律下面的几个 mi 换成 sol 或去掉，给左手让位
+- 《反方向的钟（钢琴演奏版）》和《反方向的钟（钢琴演奏版·简化）》：从 B 站上一段钢琴演奏的录音扒的谱。
+  录音用 transkun（钢琴转谱模型）转成 MIDI，再对齐到十六分音符的网格，结果存在 `scripts/data/fanfangxiang-cover.json` 里；
+  `scripts/make-cover-fanfangxiang.mjs` 从这份数据生成两份 MusicXML。前奏和尾奏是自由速度弹的，按乐句摆回了拍子上。
+  原版照录音记（降 B 大调），只做分手和记谱整理，机器转的谱个别音会有出入；
+  简化版移到 C 调，右手只留旋律、拍点上最多垫一个音，高八度的主题降回中音区，
+  左手换成每半小节一个根音加一个双音（手位不超过六度），进副歌前一小节很绕的节奏改成了一拍两个音
 - 《反方向的钟（C 调入门版）》：手工编配，音符写在 `scripts/make-easy-fanfangxiang.mjs` 里，生成 MusicXML。
   右手是人声旋律（对照上面那份扒谱，移到 C 调，节奏照原曲），左手是一个两小节的固定音型，
   谱面带和弦标记、踏板线和指法；收前奏、主歌、导歌、副歌（反复一遍）和尾奏，共 31 小节
