@@ -1,4 +1,5 @@
 import { MusicSystem, OpenSheetMusicDisplay, VoiceEntry } from 'opensheetmusicdisplay';
+import { drawDotsInSvg } from './jianpu';
 
 interface StepPos {
   /** 距小节开头的位置，单位是四分音符 */
@@ -103,6 +104,7 @@ export class ScoreView {
     if (!this.loaded) return;
     this.osmd.zoom = this.zoom;
     this.osmd.render();
+    drawDotsInSvg(this.host);
     this.renderedWidth = this.host.clientWidth;
     this.measure();
     this.lastTop = -1;

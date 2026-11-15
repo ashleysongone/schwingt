@@ -10,6 +10,7 @@ import { keyName, labelFor, LABEL_MODES, LabelMode } from './model/solfege';
 import { Timeline } from './model/timeline';
 import { Score } from './model/types';
 import { ActiveKey, Keyboard } from './view/keyboard';
+import { showLabels } from './view/jianpu';
 import { ScoreView } from './view/scoreView';
 
 // ---------- 设置 ----------
@@ -31,7 +32,7 @@ const DEFAULTS: Settings = {
   tempo: 70,
   metronome: false,
   countIn: true,
-  labelMode: 'fixed',
+  labelMode: 'number',
   labelsOff: [],
   zoom: 1,
 };
@@ -579,7 +580,7 @@ function frame(): void {
   const sung = new Map<number, { midi: number; label: string }[]>();
   for (const tn of timeline.activeAt(beat)) {
     const n = tn.note;
-    const label = labelFor(n.step, n.alter, score.measures[n.measure].fifths, settings.labelMode);
+    const label = labelFor(n.step, n.alter, score.measures[n.measure].fifths, settings.labelMode, n.octave);
     let list = sung.get(n.track);
     if (!list) sung.set(n.track, (list = []));
     list.push({ midi: n.midi, label });
@@ -591,8 +592,7 @@ function frame(): void {
   for (const [track, ui] of handUi) {
     const list = sung.get(track) ?? [];
     list.sort((a, b) => a.midi - b.midi);
-    const text = list.length ? list.map((x) => x.label).join(' ') : '·';
-    if (ui.syllable.textContent !== text) ui.syllable.textContent = text;
+    showLabels(ui.syllable, list.length ? list.map((x) => x.label) : ['·']);
   }
 
   countEl.hidden = count === 0;

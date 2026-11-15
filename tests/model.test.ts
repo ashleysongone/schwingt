@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { withLabels } from '../src/model/labels';
 import { parseMusicXml, parseXml } from '../src/model/musicxml';
 import { unroll } from '../src/model/sequence';
-import { keyName, labelFor, majorTonic } from '../src/model/solfege';
+import { keyName, labelFor, majorTonic, splitDots } from '../src/model/solfege';
 import { Timeline } from '../src/model/timeline';
 
 const demoXml = readFileSync(resolve(__dirname, '../public/scores/twinkle.musicxml'), 'utf8');
@@ -307,6 +307,23 @@ describe('唱名', () => {
     expect(labelFor('E', -1, -3, 'movable')).toBe('do');
     expect(labelFor('B', 0, -3, 'movable')).toBe('♯sol');
     expect(labelFor('C', 1, 7, 'movable')).toBe('do');
+    // 简谱：中央 C 那一组不带点，高八度的点在上面，低八度的点在下面
+    expect(labelFor('C', 0, 0, 'number', 4)).toBe('1');
+    expect(labelFor('B', 0, 0, 'number', 4)).toBe('7');
+    expect(labelFor('A', 0, 0, 'number', 5)).toBe('6\u0307');
+    expect(labelFor('A', 0, 0, 'number', 6)).toBe('6\u0307\u0307');
+    expect(labelFor('B', 0, 0, 'number', 3)).toBe('7\u0323');
+    expect(labelFor('G', 1, 0, 'number', 2)).toBe('♯5\u0323\u0323');
+    // G 调的 1 是中央 C 下面的 G：G3 到升 F4 不带点
+    expect(labelFor('G', 0, 1, 'number', 3)).toBe('1');
+    expect(labelFor('F', 1, 1, 'number', 4)).toBe('7');
+    expect(labelFor('G', 0, 1, 'number', 4)).toBe('1\u0307');
+    // 显示的时候把点拆出来自己画：正数是上面的点，负数是下面的点
+    expect(splitDots(labelFor('A', 0, 0, 'number', 6))).toEqual({ text: '6', dots: 2 });
+    expect(splitDots(labelFor('G', 1, 0, 'number', 2))).toEqual({ text: '♯5', dots: -2 });
+    expect(splitDots('♭si')).toEqual({ text: '♭si', dots: 0 });
+    // 不给八度就不带点
+    expect(labelFor('A', 0, 0, 'number')).toBe('6');
   });
 
   it('简谱数字和音名', () => {

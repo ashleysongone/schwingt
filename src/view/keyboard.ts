@@ -1,3 +1,4 @@
+import { showLabels } from './jianpu';
 export interface ActiveKey {
   midi: number;
   track: number;
@@ -95,7 +96,7 @@ export class Keyboard {
       const key = this.keys.get(midi);
       if (!key) continue;
       key.classList.remove('on', 't0', 't1', 't2');
-      this.labels.get(midi)!.textContent = key.dataset.rest ?? '';
+      showLabels(this.labels.get(midi)!, key.dataset.rest ? [key.dataset.rest] : []);
     }
     for (const [midi, sig] of next) {
       if (this.active.get(midi) === sig) continue;
@@ -105,7 +106,7 @@ export class Keyboard {
       const track = Number(sig.slice(0, sep));
       key.classList.remove('t0', 't1', 't2');
       key.classList.add('on', `t${Math.min(track, 2)}`);
-      this.labels.get(midi)!.textContent = sig.slice(sep + 1);
+      showLabels(this.labels.get(midi)!, [sig.slice(sep + 1)]);
     }
     this.active = next;
   }

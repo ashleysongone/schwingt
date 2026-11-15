@@ -707,3 +707,34 @@ body.dragging #app::after {
     display: none;
   }
 }
+
+/* 简谱的高低音点：数字上面、下面的小圆点 */
+.jianpu {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+}
+
+.jianpu-dots {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.07em;
+  transform: translateX(-50%);
+}
+
+.jianpu-dots.up {
+  bottom: 0.9em;
+}
+
+.jianpu-dots.down {
+  top: 0.96em;
+}
+
+.jianpu-dots i {
+  width: 0.13em;
+  height: 0.13em;
+  border-radius: 50%;
+  background: currentColor;
+}

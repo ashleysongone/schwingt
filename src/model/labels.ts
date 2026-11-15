@@ -70,7 +70,7 @@ export function withLabels(src: Document, opts: LabelOptions): Document {
             let group = groups.get(key);
             if (!group) groups.set(key, (group = { anchor: el, items: [] }));
             if (!group.items.some((x) => x.midi === midi)) {
-              group.items.push({ midi, label: labelFor(step, alter, fifths, opts.mode) });
+              group.items.push({ midi, label: labelFor(step, alter, fifths, opts.mode, octave) });
             }
             break;
           }

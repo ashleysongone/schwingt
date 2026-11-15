@@ -204,7 +204,7 @@ await page.selectOption('#label-mode', 'number');
 await page.waitForFunction(() => document.getElementById('busy').hidden);
 await sleep(200);
 const numbers = await page.evaluate(
-  () => Array.from(document.querySelectorAll('#score-host svg text')).filter((t) => /^[1-7]$/.test(t.textContent.trim())).length,
+  () => Array.from(document.querySelectorAll('#score-host svg text')).filter((t) => /^[1-7][\u0307\u0323]*$/.test(t.textContent.trim())).length,
 );
 check('切换到简谱数字', numbers > 20, `${numbers} 个`);
 await page.click('#hands .hand.t1 .toggle');
